@@ -11,7 +11,7 @@ const Landing = () => {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent" />
-            <span className="text-xl font-bold">QuanTrack</span>
+            <span className="text-xl font-bold">Quantrack</span>
           </div>
           <div className="flex items-center gap-4">
             <Link to="/login">
@@ -36,7 +36,7 @@ const Landing = () => {
               </span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              QuanTrack revolutionizes how non-profit organizations manage volunteer participation.
+              Quantrack revolutionizes how non-profit organizations manage volunteer participation.
               Track hours, issue certificates, and engage your community like never before.
             </p>
             <div className="flex gap-4 justify-center pt-4">
@@ -133,7 +133,7 @@ const Landing = () => {
           <Card className="p-12 text-center bg-gradient-to-br from-card to-secondary border-accent/50">
             <h2 className="text-4xl font-bold mb-4">Ready to Transform Your Organization?</h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
-              Join QuanTrack today and experience the future of volunteer management.
+              Join Quantrack today and experience the future of volunteer management.
               Get started in minutes.
             </p>
             <Link to="/signup">
@@ -148,7 +148,7 @@ const Landing = () => {
       {/* Footer */}
       <footer className="border-t border-border py-8 px-4">
         <div className="container mx-auto text-center text-muted-foreground">
-          <p>© 2025 QuanTrack. All rights reserved.</p>
+          <p>© 2025 Quantrack. All rights reserved.</p>
         </div>
       </footer>
     </div>

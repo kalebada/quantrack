@@ -13,10 +13,10 @@ const Signup = () => {
         <div className="text-center space-y-2">
           <Link to="/" className="inline-flex items-center gap-2 mb-4">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent" />
-            <span className="text-2xl font-bold">QuanTrack</span>
+            <span className="text-2xl font-bold">Quantrack</span>
           </Link>
           <h1 className="text-3xl font-bold">Create Your Account</h1>
-          <p className="text-muted-foreground">Join QuanTrack and start managing volunteers</p>
+          <p className="text-muted-foreground">Join Quantrack and start managing volunteers</p>
         </div>
 
         <Card className="p-6 bg-card border-border">

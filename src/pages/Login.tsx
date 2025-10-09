@@ -12,7 +12,7 @@ const Login = () => {
         <div className="text-center space-y-2">
           <Link to="/" className="inline-flex items-center gap-2 mb-4">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent" />
-            <span className="text-2xl font-bold">QuanTrack</span>
+            <span className="text-2xl font-bold">Quantrack</span>
           </Link>
           <h1 className="text-3xl font-bold">Welcome Back</h1>
           <p className="text-muted-foreground">Sign in to your account to continue</p>
