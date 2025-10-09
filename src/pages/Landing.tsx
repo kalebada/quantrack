@@ -2,10 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Users, Calendar, Award, TrendingUp, Shield, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
-
 const Landing = () => {
-  return (
-    <div className="min-h-screen">
+  return <div className="min-h-screen">
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -35,10 +33,7 @@ const Landing = () => {
                 Reimagined
               </span>
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Quantrack revolutionizes how non-profit organizations manage volunteer participation.
-              Track hours, issue certificates, and engage your community like never before.
-            </p>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Quantrack revolutionizes how organizations manage team participation. Track hours, issue certificates, and engage your community like never before.</p>
             <div className="flex gap-4 justify-center pt-4">
               <Link to="/signup">
                 <Button variant="hero" size="xl">
@@ -58,9 +53,7 @@ const Landing = () => {
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4">Powerful Features</h2>
-            <p className="text-muted-foreground text-lg">
-              Everything you need to manage volunteers effectively
-            </p>
+            <p className="text-muted-foreground text-lg">Everything you need to manage your team effectively</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -68,10 +61,8 @@ const Landing = () => {
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Users className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Volunteer Portal</h3>
-              <p className="text-muted-foreground">
-                Intuitive dashboard for volunteers to track hours, view events, and manage their engagement.
-              </p>
+              <h3 className="text-xl font-semibold mb-2">Team Portal</h3>
+              <p className="text-muted-foreground">Intuitive dashboard for members to track hours, view events, and manage their engagement.</p>
             </Card>
 
             <Card className="p-6 bg-card border-border hover:border-accent transition-all duration-300 hover:shadow-lg group">
@@ -98,10 +89,8 @@ const Landing = () => {
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <TrendingUp className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Gamification</h3>
-              <p className="text-muted-foreground">
-                Level-up system based on volunteer hours to motivate and engage your community.
-              </p>
+              <h3 className="text-xl font-semibold mb-2">Engagement</h3>
+              <p className="text-muted-foreground">Level-up system based on participation to motivate and engage your community.</p>
             </Card>
 
             <Card className="p-6 bg-card border-border hover:border-accent transition-all duration-300 hover:shadow-lg group">
@@ -119,9 +108,7 @@ const Landing = () => {
                 <Zap className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Admin Dashboard</h3>
-              <p className="text-muted-foreground">
-                Comprehensive tools for managing volunteers, events, and generating reports.
-              </p>
+              <p className="text-muted-foreground">Comprehensive tools for team, event, and organization management.</p>
             </Card>
           </div>
         </div>
@@ -132,10 +119,7 @@ const Landing = () => {
         <div className="container mx-auto">
           <Card className="p-12 text-center bg-gradient-to-br from-card to-secondary border-accent/50">
             <h2 className="text-4xl font-bold mb-4">Ready to Transform Your Organization?</h2>
-            <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
-              Join Quantrack today and experience the future of volunteer management.
-              Get started in minutes.
-            </p>
+            <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">Join Quantrack today and experience the future of team management. Get started in minutes.</p>
             <Link to="/signup">
               <Button variant="premium" size="xl">
                 Create Free Account
@@ -151,8 +135,6 @@ const Landing = () => {
           <p>© 2025 Quantrack. All rights reserved.</p>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Landing;
