@@ -14,7 +14,203 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          job_title: string
+          organization_id: string
+          phone_number: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          job_title: string
+          organization_id: string
+          phone_number: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_title?: string
+          organization_id?: string
+          phone_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_members: {
+        Row: {
+          id: string
+          joined_at: string
+          member_role: string
+          organization_id: string
+          status: string
+          total_hours: number
+          volunteer_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          member_role?: string
+          organization_id: string
+          status?: string
+          total_hours?: number
+          volunteer_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          member_role?: string
+          organization_id?: string
+          status?: string
+          total_hours?: number
+          volunteer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_members_volunteer_id_fkey"
+            columns: ["volunteer_id"]
+            isOneToOne: false
+            referencedRelation: "volunteer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          address: string
+          city: string
+          country: string
+          created_at: string
+          established_date: string
+          id: string
+          invite_code: string
+          logo_url: string | null
+          mission_statement: string | null
+          name: string
+          organization_type: string
+          registration_number: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address: string
+          city: string
+          country: string
+          created_at?: string
+          established_date: string
+          id?: string
+          invite_code?: string
+          logo_url?: string | null
+          mission_statement?: string | null
+          name: string
+          organization_type: string
+          registration_number: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string
+          city?: string
+          country?: string
+          created_at?: string
+          established_date?: string
+          id?: string
+          invite_code?: string
+          logo_url?: string | null
+          mission_statement?: string | null
+          name?: string
+          organization_type?: string
+          registration_number?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      volunteer_profiles: {
+        Row: {
+          created_at: string
+          date_of_birth: string
+          id: string
+          level: number
+          school_organization: string
+          total_hours: number
+        }
+        Insert: {
+          created_at?: string
+          date_of_birth: string
+          id: string
+          level?: number
+          school_organization: string
+          total_hours?: number
+        }
+        Update: {
+          created_at?: string
+          date_of_birth?: string
+          id?: string
+          level?: number
+          school_organization?: string
+          total_hours?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "volunteer_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +219,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "volunteer" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +346,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["volunteer", "admin"],
+    },
   },
 } as const
