@@ -1,11 +1,58 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { loginSchema } from "@/lib/validations";
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const validated = loginSchema.parse({ email, password });
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: validated.email,
+        password: validated.password
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in.",
+      });
+
+      // Check user role and redirect accordingly
+      const userRole = data.user?.user_metadata?.role;
+      if (userRole === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/volunteer");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid email or password.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <div className="w-full max-w-md space-y-6 animate-fade-in">
@@ -26,61 +73,77 @@ const Login = () => {
             </TabsList>
 
             <TabsContent value="volunteer" className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="volunteer-email">Email</Label>
-                <Input
-                  id="volunteer-email"
-                  type="email"
-                  placeholder="Enter your email"
-                  className="bg-background"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="volunteer-password">Password</Label>
-                <Input
-                  id="volunteer-password"
-                  type="password"
-                  placeholder="Enter your password"
-                  className="bg-background"
-                />
-              </div>
-              <div className="flex justify-end">
-                <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
-              <Button className="w-full" variant="hero" size="lg">
-                Sign In
-              </Button>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="volunteer-email">Email</Label>
+                  <Input
+                    id="volunteer-email"
+                    type="email"
+                    placeholder="Enter your email"
+                    className="bg-background"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="volunteer-password">Password</Label>
+                  <Input
+                    id="volunteer-password"
+                    type="password"
+                    placeholder="Enter your password"
+                    className="bg-background"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
+                <Button className="w-full" variant="hero" size="lg" type="submit" disabled={loading}>
+                  {loading ? "Signing In..." : "Sign In"}
+                </Button>
+              </form>
             </TabsContent>
 
             <TabsContent value="admin" className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="admin-email">Email</Label>
-                <Input
-                  id="admin-email"
-                  type="email"
-                  placeholder="Enter team admin email"
-                  className="bg-background"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="admin-password">Password</Label>
-                <Input
-                  id="admin-password"
-                  type="password"
-                  placeholder="Enter your password"
-                  className="bg-background"
-                />
-              </div>
-              <div className="flex justify-end">
-                <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
-              <Button className="w-full" variant="hero" size="lg">
-                Sign In
-              </Button>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="admin-email">Email</Label>
+                  <Input
+                    id="admin-email"
+                    type="email"
+                    placeholder="Enter team admin email"
+                    className="bg-background"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-password">Password</Label>
+                  <Input
+                    id="admin-password"
+                    type="password"
+                    placeholder="Enter your password"
+                    className="bg-background"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
+                <Button className="w-full" variant="hero" size="lg" type="submit" disabled={loading}>
+                  {loading ? "Signing In..." : "Sign In"}
+                </Button>
+              </form>
             </TabsContent>
           </Tabs>
         </Card>

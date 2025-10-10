@@ -25,15 +25,15 @@ const Landing = () => {
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4">
         <div className="container mx-auto text-center">
-          <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
-            <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+          <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+            <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent leading-tight pb-4">
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 Quantifying Engagement,
               </span>
               <br />
               Multiplying Impact
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Quantrack transforms how teams track participation and engagement. Monitor contributions, issue certificates, and amplify your collective impact.</p>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto pt-2">Quantrack transforms how teams track participation and engagement. Monitor contributions, issue certificates, and amplify your collective impact.</p>
             <div className="flex gap-4 justify-center pt-4">
               <Link to="/signup">
                 <Button variant="hero" size="xl">
