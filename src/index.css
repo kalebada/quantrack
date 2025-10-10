@@ -42,10 +42,16 @@ All colors MUST be HSL.
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(260 75% 65%), hsl(280 70% 70%));
     --gradient-card: linear-gradient(180deg, hsl(220 13% 15%), hsl(220 13% 13%));
+    --gradient-glass: linear-gradient(135deg, hsla(260 75% 65% / 0.1), hsla(280 70% 70% / 0.05));
     
     /* Shadows */
     --shadow-glow: 0 0 40px hsla(260 75% 65% / 0.15);
     --shadow-card: 0 4px 20px hsla(220 13% 8% / 0.4);
+    --shadow-glass: 0 8px 32px hsla(220 13% 8% / 0.3);
+    
+    /* Glass effects */
+    --glass-bg: hsla(220 13% 18% / 0.7);
+    --glass-border: hsla(260 75% 65% / 0.2);
     
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

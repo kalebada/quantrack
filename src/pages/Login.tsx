@@ -18,11 +18,11 @@ const Login = () => {
           <p className="text-muted-foreground">Sign in to your account to continue</p>
         </div>
 
-        <Card className="p-6 bg-card border-border">
+        <Card className="p-6 bg-card/70 backdrop-blur-xl border-border shadow-glass">
           <Tabs defaultValue="volunteer" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="volunteer">Volunteer</TabsTrigger>
-              <TabsTrigger value="admin">Admin</TabsTrigger>
+              <TabsTrigger value="volunteer">Member</TabsTrigger>
+              <TabsTrigger value="admin">Team Admin</TabsTrigger>
             </TabsList>
 
             <TabsContent value="volunteer" className="space-y-4">
@@ -60,7 +60,7 @@ const Login = () => {
                 <Input
                   id="admin-email"
                   type="email"
-                  placeholder="Enter organization email"
+                  placeholder="Enter team admin email"
                   className="bg-background"
                 />
               </div>

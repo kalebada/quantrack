@@ -16,17 +16,17 @@ const Signup = () => {
             <span className="text-2xl font-bold">Quantrack</span>
           </Link>
           <h1 className="text-3xl font-bold">Create Your Account</h1>
-          <p className="text-muted-foreground">Join Quantrack and start managing volunteers</p>
+          <p className="text-muted-foreground">Join Quantrack and start tracking team engagement</p>
         </div>
 
-        <Card className="p-6 bg-card border-border">
+        <Card className="p-6 bg-card/70 backdrop-blur-xl border-border shadow-glass">
           <Tabs defaultValue="volunteer" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="volunteer">Volunteer</TabsTrigger>
-              <TabsTrigger value="organization">Organization</TabsTrigger>
+              <TabsTrigger value="volunteer">Member</TabsTrigger>
+              <TabsTrigger value="organization">Team Admin</TabsTrigger>
             </TabsList>
 
-            {/* Volunteer Signup */}
+            {/* Member Signup */}
             <TabsContent value="volunteer" className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -46,7 +46,7 @@ const Signup = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="volunteer-school">School/Organization</Label>
-                <Input id="volunteer-school" placeholder="University Name" className="bg-background" />
+                <Input id="volunteer-school" placeholder="School Name" className="bg-background" />
               </div>
 
               <div className="space-y-2">
@@ -70,10 +70,10 @@ const Signup = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="organization-code">Organization Code (Optional)</Label>
+                <Label htmlFor="organization-code">Team Code (Optional)</Label>
                 <Input
                   id="organization-code"
-                  placeholder="Enter code to join organization"
+                  placeholder="Enter code to join a team"
                   className="bg-background"
                 />
               </div>
@@ -90,30 +90,30 @@ const Signup = () => {
               </Button>
             </TabsContent>
 
-            {/* Organization Signup */}
+            {/* Team Admin Signup */}
             <TabsContent value="organization" className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
               <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Organization Details</h3>
+                <h3 className="font-semibold text-lg">Team Details</h3>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="org-name">Organization Name</Label>
-                  <Input id="org-name" placeholder="Your Organization Name" className="bg-background" />
+                  <Label htmlFor="org-name">Team Name</Label>
+                  <Input id="org-name" placeholder="Your Team Name" className="bg-background" />
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="org-established">Date of Establishment</Label>
+                    <Label htmlFor="org-established">Date Founded</Label>
                     <Input id="org-established" type="date" className="bg-background" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="org-regno">Registration Number</Label>
+                    <Label htmlFor="org-regno">Registration Number (Optional)</Label>
                     <Input id="org-regno" placeholder="e.g., 123456789" className="bg-background" />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="org-type">Organization Type</Label>
-                  <Input id="org-type" placeholder="e.g., Nonprofit, Charity" className="bg-background" />
+                  <Label htmlFor="org-type">Team Type</Label>
+                  <Input id="org-type" placeholder="e.g., Nonprofit, Sports Team, Club" className="bg-background" />
                 </div>
 
                 <div className="space-y-2">
@@ -206,8 +206,8 @@ const Signup = () => {
                   </div>
                 </div>
 
-                <Button className="w-full" variant="hero" size="lg">
-                  Register Organization
+                <Button className="w-full" variant="glass" size="lg">
+                  Register Team
                 </Button>
               </div>
             </TabsContent>
