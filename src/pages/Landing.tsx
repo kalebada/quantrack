@@ -2,13 +2,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Users, Calendar, Award, TrendingUp, Shield, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
+import logo from "@/assets/logo.svg";
 const Landing = () => {
   return <div className="min-h-screen">
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent" />
+            <img src={logo} alt="Quantrack Logo" className="h-8 w-8" />
             <span className="text-xl font-bold">Quantrack</span>
           </div>
           <div className="flex items-center gap-4">
