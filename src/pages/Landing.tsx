@@ -12,6 +12,9 @@ const Landing = () => {
             <span className="text-xl font-bold">Quantrack</span>
           </div>
           <div className="flex items-center gap-4">
+            <Link to="/verify">
+              <Button variant="ghost">Verify</Button>
+            </Link>
             <Link to="/login">
               <Button variant="ghost">Login</Button>
             </Link>

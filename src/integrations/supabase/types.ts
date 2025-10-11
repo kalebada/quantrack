@@ -53,6 +53,50 @@ export type Database = {
           },
         ]
       }
+      certificates: {
+        Row: {
+          certificate_code: string
+          created_at: string
+          end_date: string
+          generated_at: string
+          id: string
+          organization_id: string
+          start_date: string
+          total_hours: number
+          volunteer_id: string
+        }
+        Insert: {
+          certificate_code: string
+          created_at?: string
+          end_date: string
+          generated_at?: string
+          id?: string
+          organization_id: string
+          start_date: string
+          total_hours: number
+          volunteer_id: string
+        }
+        Update: {
+          certificate_code?: string
+          created_at?: string
+          end_date?: string
+          generated_at?: string
+          id?: string
+          organization_id?: string
+          start_date?: string
+          total_hours?: number
+          volunteer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           id: string
@@ -207,6 +251,50 @@ export type Database = {
             columns: ["id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      volunteer_sessions: {
+        Row: {
+          created_at: string
+          description: string | null
+          hours_worked: number
+          id: string
+          organization_id: string
+          session_date: string
+          updated_at: string
+          verified_by: string | null
+          volunteer_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          hours_worked: number
+          id?: string
+          organization_id: string
+          session_date: string
+          updated_at?: string
+          verified_by?: string | null
+          volunteer_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          hours_worked?: number
+          id?: string
+          organization_id?: string
+          session_date?: string
+          updated_at?: string
+          verified_by?: string | null
+          volunteer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "volunteer_sessions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
