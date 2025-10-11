@@ -34,7 +34,7 @@ const VolunteerDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="border-b border-border bg-card/70 backdrop-blur-xl">
+      <nav className="border-b border-border bg-card/70 backdrop-blur-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent" />
@@ -64,12 +64,12 @@ const VolunteerDashboard = () => {
         <div className="mb-8 flex justify-center">
           <Button
             onClick={() => setShowQRCode(true)}
+            variant="premium"
             size="lg"
-            className="bg-gradient-to-r from-primary via-accent to-primary hover:shadow-glass transition-all duration-300 text-lg px-8 py-6 rounded-2xl group relative overflow-hidden"
+            className="text-lg px-8 py-6"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 blur-xl group-hover:blur-2xl transition-all" />
-            <QrCode className="w-6 h-6 mr-3 relative z-10" />
-            <span className="relative z-10 font-semibold">My Code</span>
+            <QrCode className="w-6 h-6 mr-3" />
+            <span className="font-semibold">My Code</span>
           </Button>
         </div>
 
@@ -97,7 +97,7 @@ const VolunteerDashboard = () => {
             ))}
 
             {/* Add New Org Card */}
-            <Card className="p-6 bg-card/40 backdrop-blur-sm border-dashed border-2 border-border hover:border-primary/50 transition-all duration-300 cursor-pointer group flex items-center justify-center min-h-[180px]">
+            <Card className="p-6 bg-card/70 backdrop-blur-sm border-dashed border-2 border-border hover:border-primary/50 transition-all duration-300 cursor-pointer group flex items-center justify-center min-h-[180px]">
               <div className="text-center">
                 <Plus className="w-10 h-10 text-muted-foreground group-hover:text-primary mx-auto mb-3 transition-colors" />
                 <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors font-medium">

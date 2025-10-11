@@ -33,14 +33,14 @@ const Landing = () => {
               <br />
               Multiplying Impact
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto pt-2">Quantrack transforms how teams track participation and engagement. Monitor contributions, issue certificates, and amplify your collective impact.</p>
-            <div className="flex gap-4 justify-center pt-4">
-              <Link to="/signup">
-                <Button variant="hero" size="xl">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto pt-2">Quantrack transforms how teams track participation and engagement. Monitor contributions, issue certificates, and amplify your collective impact.</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+              <Link to="/signup" className="w-full sm:w-auto">
+                <Button variant="hero" size="xl" className="w-full sm:w-auto">
                   Start Tracking
                 </Button>
               </Link>
-              <Button variant="outline" size="xl">
+              <Button variant="outline" size="xl" className="w-full sm:w-auto">
                 Learn More
               </Button>
             </div>
@@ -116,12 +116,12 @@ const Landing = () => {
 
       {/* CTA Section */}
       <section className="py-20 px-4">
-        <div className="container mx-auto">
-          <Card className="p-12 text-center bg-card/50 backdrop-blur-xl border-accent/50 shadow-glass">
-            <h2 className="text-4xl font-bold mb-4">Ready to Transform Your Team?</h2>
-            <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">Join Quantrack today and experience the future of engagement tracking. Get started in minutes.</p>
-            <Link to="/signup">
-              <Button variant="premium" size="xl">
+        <div className="container mx-auto max-w-4xl">
+          <Card className="p-8 md:p-12 text-center bg-card/70 backdrop-blur-sm border-border">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Transform Your Team?</h2>
+            <p className="text-muted-foreground text-base md:text-lg mb-8 max-w-2xl mx-auto">Join Quantrack today and experience the future of engagement tracking. Get started in minutes.</p>
+            <Link to="/signup" className="inline-block">
+              <Button variant="premium" size="xl" className="w-full sm:w-auto">
                 Create Free Account
               </Button>
             </Link>

@@ -43,7 +43,7 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="border-b border-border bg-card/70 backdrop-blur-xl">
+      <nav className="border-b border-border bg-card/70 backdrop-blur-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Button variant="ghost" onClick={onBack} className="gap-2">
             <ArrowLeft className="w-4 h-4" />
@@ -73,9 +73,8 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
         </div>
 
         {/* Level & Progress Card */}
-        <Card className="mb-8 bg-gradient-to-br from-card/90 via-card/70 to-card/90 backdrop-blur-xl border-primary/30 shadow-glass overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5" />
-          <CardHeader className="relative">
+        <Card className="mb-8 bg-card/70 backdrop-blur-sm border-border">
+          <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span className="text-2xl">Your Progress</span>
               <Badge variant="default" className="bg-gradient-to-r from-primary to-accent border-0 text-lg px-4 py-2">
@@ -84,7 +83,7 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
               </Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent className="relative space-y-6">
+          <CardContent className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-muted-foreground">
@@ -114,7 +113,7 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
             </div>
             
             <div className="pt-4 border-t border-border/50">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <Download className="w-5 h-5 text-primary" />
                   <div>
@@ -122,9 +121,9 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
                     <p className="text-xs text-muted-foreground">Official record of your hours</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                   <Select value={dateRange} onValueChange={setDateRange}>
-                    <SelectTrigger className="w-[180px] bg-background/50">
+                    <SelectTrigger className="w-full sm:w-[180px] bg-background/50">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -134,7 +133,7 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
                       <SelectItem value="custom">Custom Range</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button className="bg-gradient-to-r from-primary to-accent hover:shadow-glass">
+                  <Button className="bg-gradient-to-r from-primary to-accent hover:shadow-glass w-full sm:w-auto">
                     Download
                   </Button>
                 </div>
