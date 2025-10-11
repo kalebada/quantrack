@@ -41,7 +41,7 @@ const VolunteerDashboard = () => {
             <span className="text-xl font-bold">Quantrack</span>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={() => window.location.href = '/profile'}>
               Profile
             </Button>
             <Button variant="outline" size="sm">

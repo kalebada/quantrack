@@ -91,4 +91,17 @@ All colors MUST be HSL.
   ::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--accent));
   }
+
+  /* Calendar day selection styling - clean rounded corners */
+  .rdp-selected {
+    @apply bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground;
+  }
+
+  .rdp-day_button {
+    @apply rounded-md;
+  }
+
+  .rdp-day_button.rdp-selected {
+    @apply rounded-md;
+  }
 }

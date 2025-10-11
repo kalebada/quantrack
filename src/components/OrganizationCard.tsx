@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Award } from "lucide-react";
+import { formatHours, getMedalInfo, getMedalProgress } from "@/lib/formatters";
 
 interface OrganizationCardProps {
   id: string;
@@ -11,9 +11,11 @@ interface OrganizationCardProps {
   onClick: () => void;
 }
 
-export const OrganizationCard = ({ name, logoUrl, level, totalPoints, onClick }: OrganizationCardProps) => {
-  const nextLevelPoints = level * 1000;
-  const progress = (totalPoints % 1000) / 10;
+export const OrganizationCard = ({ name, logoUrl, totalPoints, onClick }: OrganizationCardProps) => {
+  // Convert points to hours (1 point = 1 minute)
+  const totalHours = totalPoints / 60;
+  const medal = getMedalInfo(totalHours);
+  const progress = getMedalProgress(totalHours);
 
   return (
     <Card
@@ -33,22 +35,29 @@ export const OrganizationCard = ({ name, logoUrl, level, totalPoints, onClick }:
             {name}
           </h3>
           <div className="flex items-center gap-2 mb-3">
-            <Badge variant="default" className="bg-gradient-to-r from-primary to-accent border-0">
-              <Award className="w-3 h-3 mr-1" />
-              Level {level}
+            <Badge
+              variant="default"
+              className={`bg-gradient-to-r ${medal.color} border-0 text-white`}
+            >
+              {medal.emoji} {medal.name}
             </Badge>
           </div>
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{totalPoints % 1000} / 1000 pts</span>
+              <span>{formatHours(totalHours)}</span>
               <span>{progress.toFixed(0)}%</span>
             </div>
             <div className="w-full bg-muted/50 rounded-full h-2 overflow-hidden">
               <div
-                className="bg-gradient-to-r from-primary via-accent to-primary h-2 rounded-full transition-all duration-500"
+                className={`bg-gradient-to-r ${medal.color} h-2 rounded-full transition-all duration-500`}
                 style={{ width: `${progress}%` }}
               />
             </div>
+            {medal.maxHours && (
+              <p className="text-xs text-muted-foreground">
+                {formatHours(medal.maxHours - totalHours)} to {getMedalInfo(medal.maxHours).name}
+              </p>
+            )}
           </div>
         </div>
       </div>

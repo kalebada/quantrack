@@ -3,9 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft, Download, Award, Clock, TrendingUp, Calendar as CalendarIcon } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Download, Award, Clock, TrendingUp, Calendar as CalendarIcon, Trophy } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatHours, getMedalInfo, getMedalProgress } from "@/lib/formatters";
+import { Leaderboard } from "@/components/Leaderboard";
 
 interface OrganizationDetailProps {
   organizationId: string;
@@ -17,15 +20,19 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
   // Mock data - will be replaced with actual data from Supabase
+  const member = {
+    id: "current-user-id",
+    totalHours: 70.83,
+  };
+
   const organization = {
     id: organizationId,
     name: "Community Food Bank",
     logoUrl: "",
-    level: 5,
-    totalPoints: 4250,
-    totalHours: 70.83,
-    nextLevelPoints: 5000,
   };
+
+  const medal = getMedalInfo(member.totalHours);
+  const medalProgress = getMedalProgress(member.totalHours);
 
   const upcomingEvents = [
     { id: 1, title: "Food Distribution", date: "Jan 25, 2025", time: "9:00 AM - 1:00 PM", roleTag: "Volunteer" },
@@ -36,9 +43,16 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
   const recentActivity = [
     { id: 1, title: "Food Packing", date: "Jan 15, 2025", hours: 4, status: "Completed" },
     { id: 2, title: "Warehouse Organization", date: "Jan 10, 2025", hours: 3, status: "Completed" },
+    { id: 3, title: "Community Kitchen", date: "Jan 5, 2025", hours: 5.5, status: "Completed" },
   ];
 
-  const progress = ((organization.totalPoints % 1000) / 10);
+  const leaderboardMembers = [
+    { id: "1", name: "Sarah Johnson", avatarUrl: "", totalHours: 120.5, rank: 1 },
+    { id: "2", name: "Mike Chen", avatarUrl: "", totalHours: 95.25, rank: 2 },
+    { id: "3", name: "Emma Davis", avatarUrl: "", totalHours: 82, rank: 3 },
+    { id: "current-user-id", name: "John Smith", avatarUrl: "", totalHours: member.totalHours, rank: 4 },
+    { id: "5", name: "Alex Rodriguez", avatarUrl: "", totalHours: 58.75, rank: 5 },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -72,109 +86,172 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
           </div>
         </div>
 
-        {/* Level & Progress Card */}
+        {/* Level & Progress Card with Tabs */}
         <Card className="mb-8 bg-card/70 backdrop-blur-sm border-border">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span className="text-2xl">Your Progress</span>
-              <Badge variant="default" className="bg-gradient-to-r from-primary to-accent border-0 text-lg px-4 py-2">
-                <Award className="w-5 h-5 mr-2" />
-                Level {organization.level}
+              <Badge
+                variant="default"
+                className={`bg-gradient-to-r ${medal.color} border-0 text-lg px-4 py-2 text-white`}
+              >
+                {medal.emoji} {medal.name}
               </Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Clock className="w-5 h-5" />
-                  <span className="text-sm">Total Hours with Organization</span>
-                </div>
-                <div className="text-5xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-                  {organization.totalHours}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  = {organization.totalPoints} points earned
-                </p>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <TrendingUp className="w-5 h-5" />
-                  <span className="text-sm">Next Level Progress</span>
-                </div>
-                <div className="text-3xl font-bold">
-                  {organization.totalPoints % 1000} / 1000 pts
-                </div>
-                <Progress value={progress} className="h-3 bg-muted/50" />
-                <p className="text-xs text-muted-foreground">
-                  {1000 - (organization.totalPoints % 1000)} points until Level {organization.level + 1}
-                </p>
-              </div>
-            </div>
-            
-            <div className="pt-4 border-t border-border/50">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <Download className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="font-semibold">Download Certificate</p>
-                    <p className="text-xs text-muted-foreground">Official record of your hours</p>
+          <CardContent>
+            <Tabs defaultValue="progress" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="progress">
+                  <TrendingUp className="w-4 h-4 mr-2" />
+                  My Progress
+                </TabsTrigger>
+                <TabsTrigger value="leaderboard">
+                  <Trophy className="w-4 h-4 mr-2" />
+                  Leaderboard
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="progress" className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Clock className="w-5 h-5" />
+                      <span className="text-sm">Total Hours with Organization</span>
+                    </div>
+                    <div className="text-5xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+                      {formatHours(member.totalHours)}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Earned {medal.name} Medal
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <TrendingUp className="w-5 h-5" />
+                      <span className="text-sm">
+                        Next Medal: {medal.maxHours ? getMedalInfo(medal.maxHours).name : "Max Level"}
+                      </span>
+                    </div>
+                    <div className="text-3xl font-bold">
+                      {medal.maxHours
+                        ? `${formatHours(member.totalHours)} / ${formatHours(medal.maxHours)}`
+                        : "Max Level Achieved!"}
+                    </div>
+                    {medal.maxHours && (
+                      <>
+                        <Progress value={medalProgress} className="h-3 bg-muted/50" />
+                        <p className="text-xs text-muted-foreground">
+                          {formatHours(medal.maxHours - member.totalHours)} until {getMedalInfo(medal.maxHours).name}
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-                  <Select value={dateRange} onValueChange={setDateRange}>
-                    <SelectTrigger className="w-full sm:w-[180px] bg-background/50">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all-time">All Time</SelectItem>
-                      <SelectItem value="this-year">This Year</SelectItem>
-                      <SelectItem value="last-6-months">Last 6 Months</SelectItem>
-                      <SelectItem value="custom">Custom Range</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button className="bg-gradient-to-r from-primary to-accent hover:shadow-glass w-full sm:w-auto">
-                    Download
-                  </Button>
+
+                <div className="pt-4 border-t border-border/50">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <Download className="w-5 h-5 text-primary" />
+                      <div>
+                        <p className="font-semibold">Download Certificate</p>
+                        <p className="text-xs text-muted-foreground">Official record of your hours</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                      <Select value={dateRange} onValueChange={setDateRange}>
+                        <SelectTrigger className="w-full sm:w-[180px] bg-background/50">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all-time">All Time</SelectItem>
+                          <SelectItem value="this-year">This Year</SelectItem>
+                          <SelectItem value="last-6-months">Last 6 Months</SelectItem>
+                          <SelectItem value="custom">Custom Range</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button className="bg-gradient-to-r from-primary to-accent hover:shadow-glass w-full sm:w-auto">
+                        Download
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </TabsContent>
+
+              <TabsContent value="leaderboard">
+                <Leaderboard members={leaderboardMembers} currentUserId={member.id} />
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
 
-        {/* Calendar & Events */}
+        {/* Events Section with Tabs */}
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
           <Card className="lg:col-span-2 bg-card/70 backdrop-blur-sm border-border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CalendarIcon className="w-5 h-5 text-primary" />
-                Upcoming Events
+                Events
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {upcomingEvents.map((event) => (
-                  <div
-                    key={event.id}
-                    className="p-4 rounded-lg bg-background/50 border border-border hover:border-primary/50 transition-colors"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-semibold mb-1">{event.title}</h4>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {event.date} • {event.time}
-                        </p>
-                        <Badge variant="outline" className="text-xs">
-                          {event.roleTag}
-                        </Badge>
+              <Tabs defaultValue="upcoming">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                  <TabsTrigger value="recent">Recent Attended</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="upcoming" className="space-y-3">
+                  {upcomingEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      className="p-4 rounded-lg bg-background/50 border border-border hover:border-primary/50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-semibold mb-1">{event.title}</h4>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            {event.date} • {event.time}
+                          </p>
+                          <Badge variant="outline" className="text-xs">
+                            {event.roleTag}
+                          </Badge>
+                        </div>
+                        <Button variant="glass" size="sm">
+                          View
+                        </Button>
                       </div>
-                      <Button variant="glass" size="sm">
-                        View
-                      </Button>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="recent" className="space-y-3">
+                  {recentActivity.map((activity) => (
+                    <div
+                      key={activity.id}
+                      className="p-4 rounded-lg bg-background/50 border border-border"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Clock className="w-4 h-4 text-primary" />
+                            <h4 className="font-semibold">{activity.title}</h4>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">{activity.date}</p>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="default" className="bg-primary/10 text-primary border-0 text-xs">
+                              {activity.status}
+                            </Badge>
+                            <span className="text-sm font-medium text-primary">
+                              {formatHours(activity.hours)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
 
@@ -192,33 +269,6 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
             </CardContent>
           </Card>
         </div>
-
-        {/* Recent Activity */}
-        <Card className="bg-card/70 backdrop-blur-sm border-border">
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-center gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">{activity.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {activity.hours} hours • {activity.date}
-                    </p>
-                  </div>
-                  <Badge variant="default" className="bg-primary/10 text-primary border-0">
-                    {activity.status}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
