@@ -1,14 +1,32 @@
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Plus, Users, Calendar, Award, Settings, QrCode } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Users, Calendar, CheckCircle, Settings, QrCode, UserPlus, Award as AwardIcon, Clock } from "lucide-react";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import logo from "@/assets/logo.svg";
 
 const AdminDashboard = () => {
-  const stats = {
-    totalVolunteers: 156,
-    activeEvents: 8,
-    hoursThisMonth: 1240,
-    certificates: 89,
-  };
+  // Mock data for active volunteers over time
+  const volunteerData = [
+    { month: "Jan", volunteers: 45 },
+    { month: "Feb", volunteers: 52 },
+    { month: "Mar", volunteers: 68 },
+    { month: "Apr", volunteers: 75 },
+    { month: "May", volunteers: 89 },
+    { month: "Jun", volunteers: 102 },
+    { month: "Jul", volunteers: 118 },
+    { month: "Aug", volunteers: 135 },
+    { month: "Sep", volunteers: 142 },
+    { month: "Oct", volunteers: 156 },
+  ];
+
+  const recentActivity = [
+    { type: "joined", name: "Sarah Johnson", detail: "New member joined", time: "2 hours ago", icon: UserPlus },
+    { type: "certificate", name: "Michael Chen", detail: "Certificate generated • 45 hours", time: "5 hours ago", icon: AwardIcon },
+    { type: "joined", name: "Emily Rodriguez", detail: "New member joined", time: "1 day ago", icon: UserPlus },
+    { type: "hours", name: "David Kim", detail: "Logged 8 hours • Food Drive", time: "1 day ago", icon: Clock },
+    { type: "certificate", name: "Jessica Williams", detail: "Certificate generated • 32 hours", time: "2 days ago", icon: AwardIcon },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,50 +50,62 @@ const AdminDashboard = () => {
       </nav>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Community Food Bank Dashboard</h1>
-          <p className="text-muted-foreground">Manage your organization and volunteers</p>
-        </div>
+        {/* Header with Organization Info */}
+        <Card className="mb-8 bg-card border-border">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-6">
+              <div className="w-24 h-24 rounded-lg border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
+                <img src={logo} alt="Organization Logo" className="w-16 h-16" />
+              </div>
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold mb-2">Community Food Bank</h1>
+                <p className="text-muted-foreground">Manage your organization and volunteers</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Stats Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="p-6 bg-gradient-to-br from-card to-secondary border-border">
-            <div className="flex items-center gap-3 mb-2">
+        {/* Active Volunteers Analytics */}
+        <Card className="mb-8 bg-card border-border">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5 text-primary" />
-              <span className="text-sm text-muted-foreground">Total Volunteers</span>
-            </div>
-            <div className="text-3xl font-bold">{stats.totalVolunteers}</div>
-            <p className="text-xs text-muted-foreground mt-1">+12 this month</p>
-          </Card>
-
-          <Card className="p-6 bg-gradient-to-br from-card to-secondary border-border">
-            <div className="flex items-center gap-3 mb-2">
-              <Calendar className="w-5 h-5 text-primary" />
-              <span className="text-sm text-muted-foreground">Active Events</span>
-            </div>
-            <div className="text-3xl font-bold">{stats.activeEvents}</div>
-            <p className="text-xs text-muted-foreground mt-1">3 upcoming this week</p>
-          </Card>
-
-          <Card className="p-6 bg-gradient-to-br from-card to-secondary border-border">
-            <div className="flex items-center gap-3 mb-2">
-              <Calendar className="w-5 h-5 text-primary" />
-              <span className="text-sm text-muted-foreground">Hours This Month</span>
-            </div>
-            <div className="text-3xl font-bold">{stats.hoursThisMonth}</div>
-            <p className="text-xs text-muted-foreground mt-1">+18% from last month</p>
-          </Card>
-
-          <Card className="p-6 bg-gradient-to-br from-card to-secondary border-border">
-            <div className="flex items-center gap-3 mb-2">
-              <Award className="w-5 h-5 text-primary" />
-              <span className="text-sm text-muted-foreground">Certificates Issued</span>
-            </div>
-            <div className="text-3xl font-bold">{stats.certificates}</div>
-            <p className="text-xs text-muted-foreground mt-1">This year</p>
-          </Card>
-        </div>
+              Active Volunteers Over Time
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              config={{
+                volunteers: {
+                  label: "Volunteers",
+                  color: "hsl(var(--primary))",
+                },
+              }}
+              className="h-[300px]"
+            >
+              <AreaChart data={volunteerData}>
+                <defs>
+                  <linearGradient id="colorVolunteers" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="month" className="text-xs" />
+                <YAxis className="text-xs" />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Area
+                  type="monotone"
+                  dataKey="volunteers"
+                  stroke="hsl(var(--primary))"
+                  fillOpacity={1}
+                  fill="url(#colorVolunteers)"
+                  strokeWidth={2}
+                />
+              </AreaChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
 
         {/* Quick Actions */}
         <div className="mb-8">
@@ -107,34 +137,43 @@ const AdminDashboard = () => {
 
             <Card className="p-6 bg-card border-border hover:border-accent transition-all duration-300 hover:shadow-lg cursor-pointer group">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Award className="w-6 h-6 text-primary" />
+                <CheckCircle className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="font-semibold mb-1">Generate Certificates</h3>
-              <p className="text-sm text-muted-foreground">Issue service certificates</p>
+              <h3 className="font-semibold mb-1">Approve Hours</h3>
+              <p className="text-sm text-muted-foreground">Review and approve volunteer hours</p>
             </Card>
           </div>
         </div>
 
-        {/* Recent Volunteers & Upcoming Events */}
+        {/* Recent Activity & Upcoming Events */}
         <div className="grid lg:grid-cols-2 gap-6">
           <div>
-            <h2 className="text-2xl font-bold mb-4">Recent Volunteers</h2>
+            <h2 className="text-2xl font-bold mb-4">Recent Activity</h2>
             <Card className="p-6 bg-card border-border">
               <div className="space-y-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="flex items-center gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold">
-                      JD
+                {recentActivity.map((activity, i) => {
+                  const Icon = activity.icon;
+                  return (
+                    <div key={i} className="flex items-start gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        activity.type === "joined" ? "bg-green-500/10" :
+                        activity.type === "certificate" ? "bg-primary/10" :
+                        "bg-blue-500/10"
+                      }`}>
+                        <Icon className={`w-5 h-5 ${
+                          activity.type === "joined" ? "text-green-500" :
+                          activity.type === "certificate" ? "text-primary" :
+                          "text-blue-500"
+                        }`} />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium">{activity.name}</p>
+                        <p className="text-sm text-muted-foreground">{activity.detail}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium">John Doe</p>
-                      <p className="text-sm text-muted-foreground">Volunteer • 24 hours</p>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      View
-                    </Button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </Card>
           </div>

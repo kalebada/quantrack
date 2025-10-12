@@ -36,9 +36,14 @@ const Login = () => {
         description: "You have successfully signed in.",
       });
 
-      // Check user role and redirect accordingly
-      const userRole = data.user?.user_metadata?.role;
-      if (userRole === "admin") {
+      // Check user role from profiles table
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      if (profileData?.role === "admin") {
         navigate("/admin");
       } else {
         navigate("/volunteer");
