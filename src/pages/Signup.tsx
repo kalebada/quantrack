@@ -44,7 +44,6 @@ const Signup = () => {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             full_name: `${validated.firstName} ${validated.lastName}`,
-            role: "volunteer",
             date_of_birth: validated.dateOfBirth,
             school_organization: validated.school,
             team_code: validated.teamCode
@@ -84,7 +83,6 @@ const Signup = () => {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             full_name: `${validated.adminFirstName} ${validated.adminLastName}`,
-            role: "admin",
             organization_name: validated.orgName,
             organization_type: validated.orgType,
             established_date: validated.established,
