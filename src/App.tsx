@@ -8,6 +8,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import VolunteerDashboard from "./pages/VolunteerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import ManageEvents from "./pages/ManageEvents";
+import ManageMembers from "./pages/ManageMembers";
 import Verify from "./pages/Verify";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
@@ -26,6 +28,8 @@ const App = () => (
           <Route path="/signup" element={<Signup />} />
           <Route path="/volunteer" element={<VolunteerDashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/manage-events" element={<ManageEvents />} />
+          <Route path="/manage-members" element={<ManageMembers />} />
           <Route path="/verify" element={<Verify />} />
           <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

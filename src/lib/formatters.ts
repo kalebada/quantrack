@@ -13,6 +13,17 @@ export const formatHours = (decimalHours: number): string => {
 };
 
 /**
+ * Format a date to a readable string
+ */
+export const formatDate = (date: Date): string => {
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+};
+
+/**
  * Get medal type and color based on total hours
  */
 export type MedalType = "bronze" | "silver" | "gold" | "platinum";

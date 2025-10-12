@@ -111,19 +111,25 @@ const AdminDashboard = () => {
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="p-6 bg-card border-border hover:border-accent transition-all duration-300 hover:shadow-lg cursor-pointer group">
+            <Card 
+              className="p-6 bg-card border-border hover:border-accent transition-all duration-300 hover:shadow-lg cursor-pointer group"
+              onClick={() => window.location.href = '/manage-events'}
+            >
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Plus className="w-6 h-6 text-primary" />
+                <Calendar className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="font-semibold mb-1">Create Event</h3>
-              <p className="text-sm text-muted-foreground">Schedule new volunteer event</p>
+              <h3 className="font-semibold mb-1">Manage Events</h3>
+              <p className="text-sm text-muted-foreground">Create and manage volunteer events</p>
             </Card>
 
-            <Card className="p-6 bg-card border-border hover:border-accent transition-all duration-300 hover:shadow-lg cursor-pointer group">
+            <Card 
+              className="p-6 bg-card border-border hover:border-accent transition-all duration-300 hover:shadow-lg cursor-pointer group"
+              onClick={() => window.location.href = '/manage-members'}
+            >
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Users className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="font-semibold mb-1">Manage Volunteers</h3>
+              <h3 className="font-semibold mb-1">Manage Members</h3>
               <p className="text-sm text-muted-foreground">View and manage volunteer list</p>
             </Card>
 
