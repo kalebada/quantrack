@@ -30,55 +30,29 @@ const Verify = () => {
     setResult(null);
 
     try {
-      // Try to verify as certificate first
-      const { data: certificate, error: certError } = await supabase
-        .from("certificates")
-        .select(`
-          *,
-          profiles!certificates_volunteer_id_fkey(full_name),
-          organizations(name, logo_url)
-        `)
-        .eq("certificate_code", code)
-        .single();
+      // Try to verify as certificate using secure function
+      const { data: certResult, error: certError } = await supabase.rpc('verify_certificate', {
+        cert_code: code
+      });
 
-      if (certificate && !certError) {
-        setResult({ type: "certificate", data: certificate });
+      if (!certError && certResult && (certResult as any).valid) {
+        setResult({ type: "certificate", data: certResult });
         setLoading(false);
         return;
       }
 
-      // Try to verify as member ID
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select(`
-          id,
-          full_name,
-          email,
-          volunteer_profiles(*)
-        `)
-        .eq("id", code)
-        .single();
+      // Try to verify as member ID using secure function
+      const { data: memberResult, error: memberError } = await supabase.rpc('verify_volunteer', {
+        member_code: code
+      });
 
-      if (profile && !profileError) {
-        // Fetch volunteer sessions
-        const { data: sessions, error: sessionsError } = await supabase
-          .from("volunteer_sessions")
-          .select(`
-            *,
-            organizations(name, logo_url)
-          `)
-          .eq("volunteer_id", code)
-          .order("session_date", { ascending: false });
-
-        if (sessionsError) throw sessionsError;
-
-        setResult({ 
-          type: "member", 
-          data: { profile, sessions: sessions || [] }
-        });
-      } else {
-        toast.error("No matching certificate or member ID found");
+      if (!memberError && memberResult && (memberResult as any).valid) {
+        setResult({ type: "member", data: memberResult });
+        setLoading(false);
+        return;
       }
+
+      toast.error("No matching certificate or member ID found");
     } catch (error: any) {
       console.error("Verification error:", error);
       toast.error("Verification failed. Please check the code and try again.");
@@ -154,9 +128,9 @@ const Verify = () => {
                     <Badge className="bg-primary text-primary-foreground text-lg px-4 py-2">
                       ✓ Verified Certificate
                     </Badge>
-                    <h2 className="text-3xl font-bold">{result.data.profiles.full_name}</h2>
+                    <h2 className="text-3xl font-bold">{result.data.volunteer_name}</h2>
                     <p className="text-muted-foreground">
-                      {result.data.organizations.name}
+                      {result.data.organization}
                     </p>
                   </div>
 
@@ -191,57 +165,46 @@ const Verify = () => {
             <div className="space-y-6">
               <Card className="bg-card/70 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="text-2xl">{result.data.profile.full_name}</CardTitle>
-                  <CardDescription>{result.data.profile.email}</CardDescription>
+                  <CardTitle className="text-2xl">{result.data.full_name}</CardTitle>
+                  <CardDescription>{result.data.school_organization}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {result.data.profile.volunteer_profiles && (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Current Level</p>
-                        <p className="text-2xl font-bold text-primary">
-                          Level {result.data.profile.volunteer_profiles.level}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Total Hours</p>
-                        <p className="text-2xl font-bold">
-                          {result.data.profile.volunteer_profiles.total_hours}
-                        </p>
-                      </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Current Level</p>
+                      <p className="text-2xl font-bold text-primary">
+                        Level {result.data.level}
+                      </p>
                     </div>
-                  )}
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Hours</p>
+                      <p className="text-2xl font-bold">
+                        {result.data.total_hours}
+                      </p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold">Volunteer History</h3>
-                {result.data.sessions.length === 0 ? (
+                {!result.data.sessions || result.data.sessions.length === 0 ? (
                   <Card className="bg-card/70 backdrop-blur-sm">
                     <CardContent className="py-8 text-center text-muted-foreground">
                       No volunteer sessions recorded yet
                     </CardContent>
                   </Card>
                 ) : (
-                  result.data.sessions.map((session: any) => (
-                    <Card key={session.id} className="bg-card/70 backdrop-blur-sm">
+                  result.data.sessions.map((session: any, idx: number) => (
+                    <Card key={idx} className="bg-card/70 backdrop-blur-sm">
                       <CardContent className="pt-6">
                         <div className="flex items-start justify-between">
                           <div className="space-y-2 flex-1">
-                            <div className="flex items-center gap-3">
-                              {session.organizations.logo_url && (
-                                <img
-                                  src={session.organizations.logo_url}
-                                  alt={session.organizations.name}
-                                  className="h-10 w-10 rounded-lg object-cover"
-                                />
-                              )}
-                              <div>
-                                <h4 className="font-semibold">{session.organizations.name}</h4>
-                                <p className="text-sm text-muted-foreground">
-                                  {format(new Date(session.session_date), "MMMM dd, yyyy")}
-                                </p>
-                              </div>
+                            <div>
+                              <h4 className="font-semibold">{session.organization}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {format(new Date(session.session_date), "MMMM dd, yyyy")}
+                              </p>
                             </div>
                             {session.description && (
                               <p className="text-sm text-muted-foreground mt-2">

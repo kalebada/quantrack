@@ -36,14 +36,17 @@ const Login = () => {
         description: "You have successfully signed in.",
       });
 
-      // Check user role from profiles table
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", data.user.id)
-        .single();
+      // Check user role using secure has_role function
+      const { data: isAdmin, error: roleError } = await supabase.rpc('has_role', {
+        _user_id: data.user.id,
+        _role: 'admin'
+      });
 
-      if (profileData?.role === "admin") {
+      if (roleError) {
+        console.error('Error checking role:', roleError);
+      }
+
+      if (isAdmin) {
         navigate("/admin");
       } else {
         navigate("/volunteer");

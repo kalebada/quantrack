@@ -220,6 +220,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       volunteer_profiles: {
         Row: {
           created_at: string
@@ -304,9 +325,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      assign_admin_role: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      verify_certificate: {
+        Args: { cert_code: string }
+        Returns: Json
+      }
+      verify_volunteer: {
+        Args: { member_code: string }
+        Returns: Json
+      }
     }
     Enums: {
+      app_role: "admin" | "volunteer" | "coordinator"
       user_role: "volunteer" | "admin"
     }
     CompositeTypes: {
@@ -435,6 +475,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "volunteer", "coordinator"],
       user_role: ["volunteer", "admin"],
     },
   },
