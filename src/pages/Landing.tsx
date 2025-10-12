@@ -8,8 +8,8 @@ const Landing = () => {
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img src={logo} alt="Quantrack Logo" className="h-12 w-12" />
+          <div className="flex items-center gap-1">
+            <img src={logo} alt="Quantrack Logo" className="h-10 w-10" />
             <span className="text-xl font-bold">Quantrack</span>
           </div>
           <div className="flex items-center gap-4">

@@ -5,6 +5,7 @@ import { QrCode, Plus } from "lucide-react";
 import { MemberQRCode } from "@/components/MemberQRCode";
 import { OrganizationCard } from "@/components/OrganizationCard";
 import { OrganizationDetail } from "./OrganizationDetail";
+import logo from "@/assets/logo.svg";
 
 const VolunteerDashboard = () => {
   const [showQRCode, setShowQRCode] = useState(false);
@@ -36,8 +37,8 @@ const VolunteerDashboard = () => {
       {/* Navigation */}
       <nav className="border-b border-border bg-card/70 backdrop-blur-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent" />
+          <div className="flex items-center gap-1">
+            <img src={logo} alt="Quantrack Logo" className="h-8 w-8" />
             <span className="text-xl font-bold">Quantrack</span>
           </div>
           <div className="flex items-center gap-4">

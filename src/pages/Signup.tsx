@@ -10,6 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { memberSignupSchema, teamAdminSignupSchema } from "@/lib/validations";
+import logo from "@/assets/logo.svg";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -143,8 +144,8 @@ const Signup = () => {
     <div className="min-h-screen flex items-center justify-center p-4 bg-background py-12">
       <div className="w-full max-w-2xl space-y-6 animate-fade-in">
         <div className="text-center space-y-2">
-          <Link to="/" className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent" />
+          <Link to="/" className="inline-flex items-center gap-1 mb-4">
+            <img src={logo} alt="Quantrack Logo" className="h-10 w-10" />
             <span className="text-2xl font-bold">Quantrack</span>
           </Link>
           <h1 className="text-3xl font-bold">Create Your Account</h1>
