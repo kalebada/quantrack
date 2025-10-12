@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Users, Calendar, CheckCircle, Settings, QrCode, UserPlus, Award as AwardIcon, Clock } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import logo from "@/assets/logo.svg";
+import { SettingsDialog } from "@/components/SettingsDialog";
 
 const AdminDashboard = () => {
+  const [settingsOpen, setSettingsOpen] = useState(false);
   // Mock data for active volunteers over time
   const volunteerData = [
     { month: "Jan", volunteers: 45 },
@@ -38,7 +41,7 @@ const AdminDashboard = () => {
             <span className="text-xl font-bold">Quantrack Admin</span>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={() => setSettingsOpen(true)}>
               <Settings className="w-4 h-4 mr-2" />
               Settings
             </Button>
@@ -208,6 +211,8 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
+
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 };
