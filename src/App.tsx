@@ -12,6 +12,7 @@ import ManageEvents from "./pages/ManageEvents";
 import ManageMembers from "./pages/ManageMembers";
 import ApproveHours from "./pages/ApproveHours";
 import QRAttendance from "./pages/QRAttendance";
+import AssignTasks from "./pages/AssignTasks";
 import Verify from "./pages/Verify";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/manage-members" element={<ManageMembers />} />
           <Route path="/approve-hours" element={<ApproveHours />} />
           <Route path="/qr-attendance" element={<QRAttendance />} />
+          <Route path="/assign-tasks" element={<AssignTasks />} />
           <Route path="/verify" element={<Verify />} />
           <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

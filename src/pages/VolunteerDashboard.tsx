@@ -5,6 +5,7 @@ import { QrCode, Plus } from "lucide-react";
 import { MemberQRCode } from "@/components/MemberQRCode";
 import { OrganizationCard } from "@/components/OrganizationCard";
 import { OrganizationDetail } from "./OrganizationDetail";
+import { TasksCard } from "@/components/TasksCard";
 import logo from "@/assets/logo.svg";
 
 const VolunteerDashboard = () => {
@@ -74,38 +75,46 @@ const VolunteerDashboard = () => {
           </Button>
         </div>
 
-        {/* Organizations Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold">My Organizations</h2>
-            <Button variant="hero" size="sm" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Join Organization
-            </Button>
+        {/* Main Content Grid */}
+        <div className="grid lg:grid-cols-3 gap-6 mb-8">
+          {/* Tasks Section - Takes up 1 column */}
+          <div>
+            <TasksCard />
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {organizations.map((org) => (
-              <OrganizationCard
-                key={org.id}
-                id={org.id}
-                name={org.name}
-                logoUrl={org.logoUrl}
-                level={org.level}
-                totalPoints={org.totalPoints}
-                onClick={() => setSelectedOrgId(org.id)}
-              />
-            ))}
+          {/* Organizations Section - Takes up 2 columns */}
+          <div className="lg:col-span-2">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold">My Organizations</h2>
+              <Button variant="hero" size="sm" className="gap-2">
+                <Plus className="w-4 h-4" />
+                Join Organization
+              </Button>
+            </div>
 
-            {/* Add New Org Card */}
-            <Card className="p-6 bg-card/70 backdrop-blur-sm border-dashed border-2 border-border hover:border-primary/50 transition-all duration-300 cursor-pointer group flex items-center justify-center min-h-[180px]">
-              <div className="text-center">
-                <Plus className="w-10 h-10 text-muted-foreground group-hover:text-primary mx-auto mb-3 transition-colors" />
-                <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors font-medium">
-                  Join New Organization
-                </p>
-              </div>
-            </Card>
+            <div className="grid md:grid-cols-2 gap-6">
+              {organizations.map((org) => (
+                <OrganizationCard
+                  key={org.id}
+                  id={org.id}
+                  name={org.name}
+                  logoUrl={org.logoUrl}
+                  level={org.level}
+                  totalPoints={org.totalPoints}
+                  onClick={() => setSelectedOrgId(org.id)}
+                />
+              ))}
+
+              {/* Add New Org Card */}
+              <Card className="p-6 bg-card/70 backdrop-blur-sm border-dashed border-2 border-border hover:border-primary/50 transition-all duration-300 cursor-pointer group flex items-center justify-center min-h-[180px]">
+                <div className="text-center">
+                  <Plus className="w-10 h-10 text-muted-foreground group-hover:text-primary mx-auto mb-3 transition-colors" />
+                  <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors font-medium">
+                    Join New Organization
+                  </p>
+                </div>
+              </Card>
+            </div>
           </div>
         </div>
       </div>

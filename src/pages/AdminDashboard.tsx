@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Users, Calendar, CheckCircle, Settings, QrCode, UserPlus, Award as AwardIcon, Clock, ChevronDown } from "lucide-react";
+import { Plus, Users, Calendar, CheckCircle, Settings, QrCode, UserPlus, Award as AwardIcon, Clock, ChevronDown, ListTodo } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,6 +74,10 @@ const AdminDashboard = () => {
                 <DropdownMenuItem onClick={() => window.location.href = '/qr-attendance'}>
                   <QrCode className="w-4 h-4 mr-2" />
                   QR Attendance
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.location.href = '/assign-tasks'}>
+                  <ListTodo className="w-4 h-4 mr-2" />
+                  Assign Tasks
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
