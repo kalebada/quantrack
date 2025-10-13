@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Users, Calendar, CheckCircle, Settings, QrCode, UserPlus, Award as AwardIcon, Clock, Menu, X } from "lucide-react";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ApproveHours } from "@/components/admin/ApproveHours";
-import { QRAttendance } from "@/components/admin/QRAttendance";
+import { Plus, Users, Calendar, CheckCircle, Settings, QrCode, UserPlus, Award as AwardIcon, Clock, ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import logo from "@/assets/logo.svg";
@@ -13,8 +17,6 @@ import { SettingsDialog } from "@/components/SettingsDialog";
 
 const AdminDashboard = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [quickActionsOpen, setQuickActionsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("events");
   // Mock data for active volunteers over time
   const volunteerData = [
     { month: "Jan", volunteers: 45 },
@@ -47,103 +49,34 @@ const AdminDashboard = () => {
             <span className="text-xl font-bold">Quantrack Admin</span>
           </div>
           <div className="flex items-center gap-2">
-            <Sheet open={quickActionsOpen} onOpenChange={setQuickActionsOpen}>
-              <SheetTrigger asChild>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">
-                  <Menu className="w-4 h-4 mr-2" />
-                  Quick Actions
+                  Actions
+                  <ChevronDown className="w-4 h-4 ml-2" />
                 </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-                <SheetHeader>
-                  <SheetTitle>Quick Actions</SheetTitle>
-                  <SheetDescription>
-                    Manage your organization quickly
-                  </SheetDescription>
-                </SheetHeader>
-
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-                  <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="events" className="text-xs">
-                      <Calendar className="w-4 h-4" />
-                    </TabsTrigger>
-                    <TabsTrigger value="members" className="text-xs">
-                      <Users className="w-4 h-4" />
-                    </TabsTrigger>
-                    <TabsTrigger value="hours" className="text-xs">
-                      <CheckCircle className="w-4 h-4" />
-                    </TabsTrigger>
-                    <TabsTrigger value="qr" className="text-xs">
-                      <QrCode className="w-4 h-4" />
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="events" className="mt-4">
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Calendar className="w-5 h-5 text-primary" />
-                        <h3 className="font-semibold">Manage Events</h3>
-                      </div>
-                      <Button 
-                        className="w-full" 
-                        onClick={() => {
-                          window.location.href = '/manage-events';
-                          setQuickActionsOpen(false);
-                        }}
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create & Manage Events
-                      </Button>
-                      <p className="text-sm text-muted-foreground">
-                        Create and manage volunteer events for your organization
-                      </p>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="members" className="mt-4">
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Users className="w-5 h-5 text-primary" />
-                        <h3 className="font-semibold">Manage Members</h3>
-                      </div>
-                      <Button 
-                        className="w-full"
-                        onClick={() => {
-                          window.location.href = '/manage-members';
-                          setQuickActionsOpen(false);
-                        }}
-                      >
-                        <Users className="w-4 h-4 mr-2" />
-                        View All Members
-                      </Button>
-                      <p className="text-sm text-muted-foreground">
-                        View and manage your volunteer list
-                      </p>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="hours" className="mt-4">
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 mb-4">
-                        <CheckCircle className="w-5 h-5 text-primary" />
-                        <h3 className="font-semibold">Approve Hours</h3>
-                      </div>
-                      <ApproveHours />
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="qr" className="mt-4">
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 mb-4">
-                        <QrCode className="w-5 h-5 text-primary" />
-                        <h3 className="font-semibold">QR Attendance</h3>
-                      </div>
-                      <QRAttendance />
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </SheetContent>
-            </Sheet>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Admin Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => window.location.href = '/manage-events'}>
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Manage Events
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.location.href = '/manage-members'}>
+                  <Users className="w-4 h-4 mr-2" />
+                  Manage Members
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.location.href = '/approve-hours'}>
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Approve Hours
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.location.href = '/qr-attendance'}>
+                  <QrCode className="w-4 h-4 mr-2" />
+                  QR Attendance
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <Button variant="ghost" size="sm" onClick={() => setSettingsOpen(true)}>
               <Settings className="w-4 h-4 mr-2" />
