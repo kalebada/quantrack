@@ -97,6 +97,62 @@ export type Database = {
           },
         ]
       }
+      events: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          end_time: string
+          event_date: string
+          id: string
+          location: string
+          max_volunteers: number | null
+          name: string
+          organization_id: string
+          start_time: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_time: string
+          event_date: string
+          id?: string
+          location: string
+          max_volunteers?: number | null
+          name: string
+          organization_id: string
+          start_time: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_time?: string
+          event_date?: string
+          id?: string
+          location?: string
+          max_volunteers?: number | null
+          name?: string
+          organization_id?: string
+          start_time?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           id: string
@@ -277,10 +333,12 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          event_id: string | null
           hours_worked: number
           id: string
           organization_id: string
           session_date: string
+          status: string
           updated_at: string
           verified_by: string | null
           volunteer_id: string
@@ -288,10 +346,12 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          event_id?: string | null
           hours_worked: number
           id?: string
           organization_id: string
           session_date: string
+          status?: string
           updated_at?: string
           verified_by?: string | null
           volunteer_id: string
@@ -299,15 +359,24 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          event_id?: string | null
           hours_worked?: number
           id?: string
           organization_id?: string
           session_date?: string
+          status?: string
           updated_at?: string
           verified_by?: string | null
           volunteer_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "volunteer_sessions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "volunteer_sessions_organization_id_fkey"
             columns: ["organization_id"]
