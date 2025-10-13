@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Users, Calendar, Award, TrendingUp, Shield, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import logo from "@/assets/logo.svg";
+import { RotatingWord } from "@/components/RotatingWord";
 const Landing = () => {
   return <div className="min-h-screen">
       {/* Navigation */}
@@ -37,7 +38,9 @@ const Landing = () => {
               <br />
               Multiplying Impact
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto pt-2">Quantrack transforms how teams track participation and engagement. Monitor contributions, issue certificates, and amplify your collective impact.</p>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto pt-2">
+              Quantrack transforms how <RotatingWord /> track participation and engagement. Monitor contributions, issue certificates, and amplify your collective impact.
+            </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Link to="/signup" className="w-full sm:w-auto">
                 <Button variant="hero" size="xl" className="w-full sm:w-auto">
