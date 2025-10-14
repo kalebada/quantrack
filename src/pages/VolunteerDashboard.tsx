@@ -37,7 +37,7 @@ const VolunteerDashboard = () => {
       if (session?.user) {
         await checkAuth(session.user.id);
       } else {
-        setLoading(false);
+        if (mounted) setLoading(false);
         navigate("/login", { replace: true });
       }
       isInitializing = false;
@@ -63,6 +63,7 @@ const VolunteerDashboard = () => {
       mounted = false;
       subscription.unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkAuth = async (userId: string) => {

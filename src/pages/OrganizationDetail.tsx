@@ -98,7 +98,13 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
     try {
       const { data, error } = await supabase
         .from("organization_members")
-        .select("volunteer_id, total_hours, profiles!organization_members_volunteer_id_fkey(full_name)")
+        .select(`
+          volunteer_id,
+          total_hours,
+          profiles (
+            full_name
+          )
+        `)
         .eq("organization_id", organizationId)
         .eq("status", "active")
         .order("total_hours", { ascending: false })
@@ -182,6 +188,7 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
     return () => {
       mounted = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId]);
 
   const loadData = async () => {
