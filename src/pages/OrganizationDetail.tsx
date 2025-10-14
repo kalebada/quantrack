@@ -28,6 +28,37 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
   const [leaderboardMembers, setLeaderboardMembers] = useState<any[]>([]);
   const { toast } = useToast();
 
+  const loadLeaderboard = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("organization_members")
+        .select("volunteer_id, total_hours, profiles!organization_members_volunteer_id_fkey(full_name)")
+        .eq("organization_id", organizationId)
+        .eq("status", "active")
+        .order("total_hours", { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error("Error loading leaderboard:", error);
+        return;
+      }
+
+      if (data) {
+        const formatted = data.map((m: any, index: number) => ({
+          id: m.volunteer_id,
+          name: m.profiles?.full_name || "Unknown",
+          avatarUrl: "",
+          totalHours: m.total_hours || 0,
+          rank: index + 1,
+        }));
+        setLeaderboardMembers(formatted);
+      }
+    } catch (error) {
+      console.error("Leaderboard loading error:", error);
+      // Don't throw, just log - leaderboard is not critical
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -167,37 +198,6 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
     { id: 2, title: "Warehouse Organization", date: "Jan 10, 2025", hours: 3, status: "Completed" },
     { id: 3, title: "Community Kitchen", date: "Jan 5, 2025", hours: 5.5, status: "Completed" },
   ];
-
-  const loadLeaderboard = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("organization_members")
-        .select("volunteer_id, total_hours, profiles!organization_members_volunteer_id_fkey(full_name)")
-        .eq("organization_id", organizationId)
-        .eq("status", "active")
-        .order("total_hours", { ascending: false })
-        .limit(10);
-
-      if (error) {
-        console.error("Error loading leaderboard:", error);
-        return;
-      }
-
-      if (data) {
-        const formatted = data.map((m: any, index: number) => ({
-          id: m.volunteer_id,
-          name: m.profiles?.full_name || "Unknown",
-          avatarUrl: "",
-          totalHours: m.total_hours || 0,
-          rank: index + 1,
-        }));
-        setLeaderboardMembers(formatted);
-      }
-    } catch (error) {
-      console.error("Leaderboard loading error:", error);
-      // Don't throw, just log - leaderboard is not critical
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">
