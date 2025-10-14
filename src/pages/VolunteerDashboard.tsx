@@ -38,6 +38,15 @@ const VolunteerDashboard = () => {
         return;
       }
 
+      // Ensure user profile is set up
+      const { error: setupError } = await supabase.rpc('ensure_volunteer_profile', {
+        _user_id: user.id
+      });
+
+      if (setupError) {
+        console.error('Error setting up profile:', setupError);
+      }
+
       await loadUserData(user.id);
     } catch (error) {
       console.error("Auth error:", error);

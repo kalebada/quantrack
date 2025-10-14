@@ -41,6 +41,26 @@ const AdminDashboard = () => {
         return;
       }
 
+      // Verify user is admin
+      const { data: isAdmin, error: roleError } = await supabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'admin'
+      });
+
+      if (roleError) {
+        console.error("Error checking role:", roleError);
+      }
+
+      if (!isAdmin) {
+        toast({
+          title: "Access Denied",
+          description: "You must be an admin to access this page",
+          variant: "destructive",
+        });
+        navigate("/volunteer");
+        return;
+      }
+
       await loadOrganization(user.id);
     } catch (error) {
       console.error("Auth error:", error);
@@ -50,15 +70,26 @@ const AdminDashboard = () => {
 
   const loadOrganization = async (userId: string) => {
     try {
-      const { data: adminProfile } = await supabase
+      const { data: adminProfile, error: profileError } = await supabase
         .from("admin_profiles")
         .select("organization_id, organizations!inner(*)")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
+
+      if (profileError) {
+        console.error("Error loading admin profile:", profileError);
+      }
 
       if (adminProfile) {
         setOrganization(adminProfile.organizations);
         await loadStats(adminProfile.organization_id);
+      } else {
+        toast({
+          title: "Setup Required",
+          description: "Admin profile not found. Please contact support.",
+          variant: "destructive",
+        });
+        navigate("/");
       }
     } catch (error) {
       console.error("Error loading organization:", error);

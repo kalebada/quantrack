@@ -32,12 +32,16 @@ const Login = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in.",
+      // Ensure user profile is set up
+      const { error: setupError } = await supabase.rpc('ensure_volunteer_profile', {
+        _user_id: data.user.id
       });
 
-      // Check user role using secure has_role function
+      if (setupError) {
+        console.error('Error setting up profile:', setupError);
+      }
+
+      // Check user role
       const { data: isAdmin, error: roleError } = await supabase.rpc('has_role', {
         _user_id: data.user.id,
         _role: 'admin'
@@ -47,6 +51,12 @@ const Login = () => {
         console.error('Error checking role:', roleError);
       }
 
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in.",
+      });
+
+      // Navigate based on role
       if (isAdmin) {
         navigate("/admin");
       } else {

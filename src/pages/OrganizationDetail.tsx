@@ -28,13 +28,24 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
   const { toast } = useToast();
 
   useEffect(() => {
-    loadData();
+    if (organizationId) {
+      loadData();
+      loadLeaderboard();
+    }
   }, [organizationId]);
 
   const loadData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to view this page",
+          variant: "destructive",
+        });
+        onBack();
+        return;
+      }
 
       // Load organization
       const { data: orgData, error: orgError } = await supabase
@@ -49,12 +60,20 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
 
       if (orgData) {
         setOrganization(orgData);
+      } else {
+        toast({
+          title: "Organization Not Found",
+          description: "The organization you're looking for doesn't exist",
+          variant: "destructive",
+        });
+        onBack();
+        return;
       }
 
       // Load member hours
       const { data: memberData, error: memberError } = await supabase
         .from("organization_members")
-        .select("total_hours")
+        .select("total_hours, status")
         .eq("volunteer_id", user.id)
         .eq("organization_id", organizationId)
         .maybeSingle();
@@ -69,11 +88,14 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
           totalHours: memberData.total_hours || 0,
         });
       } else {
-        // Set default member data if no membership found
-        setMember({
-          id: user.id,
-          totalHours: 0,
+        // User is not a member of this organization
+        toast({
+          title: "Not a Member",
+          description: "You are not a member of this organization",
+          variant: "destructive",
         });
+        onBack();
+        return;
       }
     } catch (error) {
       console.error("Error loading data:", error);
@@ -82,6 +104,7 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
         description: "Failed to load organization data",
         variant: "destructive",
       });
+      onBack();
     } finally {
       setLoading(false);
     }
@@ -129,12 +152,18 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
 
   const loadLeaderboard = async () => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("organization_members")
         .select("volunteer_id, total_hours, profiles!organization_members_volunteer_id_fkey(full_name)")
         .eq("organization_id", organizationId)
+        .eq("status", "active")
         .order("total_hours", { ascending: false })
         .limit(10);
+
+      if (error) {
+        console.error("Error loading leaderboard:", error);
+        return;
+      }
 
       if (data) {
         const formatted = data.map((m: any, index: number) => ({
