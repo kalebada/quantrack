@@ -25,6 +25,7 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
   const [loading, setLoading] = useState(true);
   const [member, setMember] = useState<any>(null);
   const [organization, setOrganization] = useState<any>(null);
+  const [leaderboardMembers, setLeaderboardMembers] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -165,8 +166,6 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
     { id: 2, title: "Warehouse Organization", date: "Jan 10, 2025", hours: 3, status: "Completed" },
     { id: 3, title: "Community Kitchen", date: "Jan 5, 2025", hours: 5.5, status: "Completed" },
   ];
-
-  const [leaderboardMembers, setLeaderboardMembers] = useState<any[]>([]);
 
   const loadLeaderboard = async () => {
     const { data, error } = await supabase
