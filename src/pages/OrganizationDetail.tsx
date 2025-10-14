@@ -26,7 +26,60 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
   const [member, setMember] = useState<any>(null);
   const [organization, setOrganization] = useState<any>(null);
   const [leaderboardMembers, setLeaderboardMembers] = useState<any[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const { toast } = useToast();
+
+  const loadEvents = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Load upcoming events
+      const { data: upcomingData, error: upcomingError } = await supabase
+        .from("events")
+        .select("*")
+        .eq("organization_id", organizationId)
+        .eq("status", "upcoming")
+        .gte("event_date", new Date().toISOString().split('T')[0])
+        .order("event_date", { ascending: true });
+
+      if (!upcomingError && upcomingData) {
+        const formattedUpcoming = upcomingData.map((event: any) => ({
+          id: event.id,
+          title: event.name,
+          date: new Date(event.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          time: `${event.start_time.slice(0, 5)} - ${event.end_time.slice(0, 5)}`,
+          location: event.location,
+          roleTag: "Volunteer",
+        }));
+        setUpcomingEvents(formattedUpcoming);
+      }
+
+      // Load recent attended sessions
+      const { data: sessionsData, error: sessionsError } = await supabase
+        .from("volunteer_sessions")
+        .select("*")
+        .eq("volunteer_id", user.id)
+        .eq("organization_id", organizationId)
+        .eq("status", "approved")
+        .order("session_date", { ascending: false })
+        .limit(10);
+
+      if (!sessionsError && sessionsData) {
+        const formattedSessions = sessionsData.map((session: any) => ({
+          id: session.id,
+          title: session.description || "Volunteer Session",
+          date: new Date(session.session_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          hours: session.hours_worked,
+          status: "Completed",
+        }));
+        setRecentActivity(formattedSessions);
+      }
+    } catch (error) {
+      console.error("Error loading events:", error);
+    }
+  };
 
   const loadLeaderboard = async () => {
     try {
@@ -91,6 +144,7 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
           // Load data sequentially to better handle errors
           await loadData();
           await loadLeaderboard();
+          await loadEvents();
         }
       } catch (error: any) {
         console.error("Error initializing organization data:", error);
@@ -186,18 +240,6 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
 
   const medal = getMedalInfo(member?.totalHours || 0);
   const medalProgress = getMedalProgress(member?.totalHours || 0);
-
-  const upcomingEvents = [
-    { id: 1, title: "Food Distribution", date: "Jan 25, 2025", time: "9:00 AM - 1:00 PM", roleTag: "Volunteer" },
-    { id: 2, title: "Fundraising Gala", date: "Feb 1, 2025", time: "6:00 PM - 10:00 PM", roleTag: "Executive" },
-    { id: 3, title: "Community Outreach", date: "Feb 5, 2025", time: "2:00 PM - 5:00 PM", roleTag: "Volunteer" },
-  ];
-
-  const recentActivity = [
-    { id: 1, title: "Food Packing", date: "Jan 15, 2025", hours: 4, status: "Completed" },
-    { id: 2, title: "Warehouse Organization", date: "Jan 10, 2025", hours: 3, status: "Completed" },
-    { id: 3, title: "Community Kitchen", date: "Jan 5, 2025", hours: 5.5, status: "Completed" },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -354,7 +396,10 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
                 </TabsList>
 
                 <TabsContent value="upcoming" className="space-y-3">
-                  {upcomingEvents.map((event) => (
+                  {upcomingEvents.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No upcoming events</p>
+                  ) : (
+                    upcomingEvents.map((event) => (
                     <div
                       key={event.id}
                       className="p-4 rounded-lg bg-background/50 border border-border hover:border-primary/50 transition-colors"
@@ -374,11 +419,15 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
                         </Button>
                       </div>
                     </div>
-                  ))}
+                    ))
+                  )}
                 </TabsContent>
 
                 <TabsContent value="recent" className="space-y-3">
-                  {recentActivity.map((activity) => (
+                  {recentActivity.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No recent activity</p>
+                  ) : (
+                    recentActivity.map((activity) => (
                     <div
                       key={activity.id}
                       className="p-4 rounded-lg bg-background/50 border border-border"
@@ -401,7 +450,8 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
                         </div>
                       </div>
                     </div>
-                  ))}
+                    ))
+                  )}
                 </TabsContent>
               </Tabs>
             </CardContent>
