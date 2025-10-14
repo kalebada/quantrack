@@ -1,5 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { SubmitHoursDialog } from "@/components/SubmitHoursDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
@@ -18,21 +21,68 @@ interface OrganizationDetailProps {
 export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetailProps) => {
   const [dateRange, setDateRange] = useState("all-time");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [showSubmitHours, setShowSubmitHours] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [member, setMember] = useState<any>(null);
+  const [organization, setOrganization] = useState<any>(null);
+  const { toast } = useToast();
 
-  // Mock data - will be replaced with actual data from Supabase
-  const member = {
-    id: "current-user-id",
-    totalHours: 70.83,
+  useEffect(() => {
+    loadData();
+  }, [organizationId]);
+
+  const loadData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Load organization
+      const { data: orgData } = await supabase
+        .from("organizations")
+        .select("*")
+        .eq("id", organizationId)
+        .single();
+
+      if (orgData) {
+        setOrganization(orgData);
+      }
+
+      // Load member hours
+      const { data: memberData } = await supabase
+        .from("organization_members")
+        .select("total_hours")
+        .eq("volunteer_id", user.id)
+        .eq("organization_id", organizationId)
+        .single();
+
+      if (memberData) {
+        setMember({
+          id: user.id,
+          totalHours: memberData.total_hours || 0,
+        });
+      }
+    } catch (error) {
+      console.error("Error loading data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load organization data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const organization = {
-    id: organizationId,
-    name: "Community Food Bank",
-    logoUrl: "",
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
 
-  const medal = getMedalInfo(member.totalHours);
-  const medalProgress = getMedalProgress(member.totalHours);
+  const medal = getMedalInfo(member?.totalHours || 0);
+  const medalProgress = getMedalProgress(member?.totalHours || 0);
 
   const upcomingEvents = [
     { id: 1, title: "Food Distribution", date: "Jan 25, 2025", time: "9:00 AM - 1:00 PM", roleTag: "Volunteer" },
@@ -173,6 +223,13 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
                       <Button className="bg-gradient-to-r from-primary to-accent hover:shadow-glass w-full sm:w-auto">
                         Download
                       </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full sm:w-auto"
+                        onClick={() => setShowSubmitHours(true)}
+                      >
+                        Submit Hours
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -270,6 +327,12 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
           </Card>
         </div>
       </div>
+
+      <SubmitHoursDialog
+        isOpen={showSubmitHours}
+        onClose={() => setShowSubmitHours(false)}
+        organizationId={organizationId}
+      />
     </div>
   );
 };

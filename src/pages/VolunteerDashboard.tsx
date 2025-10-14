@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { QrCode, Plus } from "lucide-react";
@@ -6,23 +6,190 @@ import { MemberQRCode } from "@/components/MemberQRCode";
 import { OrganizationCard } from "@/components/OrganizationCard";
 import { OrganizationDetail } from "./OrganizationDetail";
 import { TasksCard } from "@/components/TasksCard";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.svg";
 
 const VolunteerDashboard = () => {
   const [showQRCode, setShowQRCode] = useState(false);
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
+  const [showJoinDialog, setShowJoinDialog] = useState(false);
+  const [inviteCode, setInviteCode] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [member, setMember] = useState<any>(null);
+  const [organizations, setOrganizations] = useState<any[]>([]);
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  // Mock data - will be replaced with actual data from Supabase
-  const member = {
-    id: "550e8400-e29b-41d4-a716-446655440000",
-    name: "John Smith",
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+
+      // Check if user is volunteer
+      const { data: hasVolunteerRole } = await supabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'volunteer'
+      });
+
+      if (!hasVolunteerRole) {
+        navigate("/admin");
+        return;
+      }
+
+      await loadUserData(user.id);
+    } catch (error) {
+      console.error("Auth error:", error);
+      navigate("/login");
+    }
   };
 
-  const organizations = [
-    { id: "1", name: "Community Food Bank", logoUrl: "", level: 5, totalPoints: 4250 },
-    { id: "2", name: "Youth Education Center", logoUrl: "", level: 3, totalPoints: 2800 },
-    { id: "3", name: "Local Animal Shelter", logoUrl: "", level: 7, totalPoints: 6540 },
-  ];
+  const loadUserData = async (userId: string) => {
+    try {
+      // Load profile
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+
+      if (profile) {
+        setMember(profile);
+      }
+
+      // Load organizations
+      const { data: memberships } = await supabase
+        .from("organization_members")
+        .select(`
+          organization_id,
+          total_hours,
+          organizations!inner(id, name, logo_url)
+        `)
+        .eq("volunteer_id", userId)
+        .eq("status", "active");
+
+      if (memberships) {
+        const orgs = memberships.map((m: any) => ({
+          id: m.organization_id,
+          name: m.organizations.name,
+          logoUrl: m.organizations.logo_url || "",
+          level: Math.floor(m.total_hours / 10) + 1,
+          totalPoints: m.total_hours,
+        }));
+        setOrganizations(orgs);
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load your data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleJoinOrganization = async () => {
+    if (!inviteCode.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter an invite code",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Find organization by invite code
+      const { data: org, error: orgError } = await supabase
+        .from("organizations")
+        .select("id")
+        .eq("invite_code", inviteCode.trim())
+        .single();
+
+      if (orgError || !org) {
+        toast({
+          title: "Invalid Code",
+          description: "Organization not found with this invite code",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Check if already a member
+      const { data: existing } = await supabase
+        .from("organization_members")
+        .select("id")
+        .eq("volunteer_id", user.id)
+        .eq("organization_id", org.id)
+        .single();
+
+      if (existing) {
+        toast({
+          title: "Already Joined",
+          description: "You are already a member of this organization",
+        });
+        setShowJoinDialog(false);
+        return;
+      }
+
+      // Join organization
+      const { error: joinError } = await supabase
+        .from("organization_members")
+        .insert({
+          volunteer_id: user.id,
+          organization_id: org.id,
+          member_role: "volunteer",
+        });
+
+      if (joinError) throw joinError;
+
+      toast({
+        title: "Success!",
+        description: "You have joined the organization",
+      });
+
+      setShowJoinDialog(false);
+      setInviteCode("");
+      await loadUserData(user.id);
+    } catch (error) {
+      console.error("Error joining organization:", error);
+      toast({
+        title: "Error",
+        description: "Failed to join organization",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
 
   if (selectedOrgId) {
     return (
@@ -43,10 +210,10 @@ const VolunteerDashboard = () => {
             <span className="text-xl font-bold">Quantrack</span>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => window.location.href = '/profile'}>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/profile')}>
               Profile
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleLogout}>
               Logout
             </Button>
           </div>
@@ -57,7 +224,7 @@ const VolunteerDashboard = () => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-            Welcome back, {member.name}! 👋
+            Welcome back, {member?.full_name || 'Volunteer'}! 👋
           </h1>
           <p className="text-muted-foreground text-lg">Track your engagement and multiply your impact</p>
         </div>
@@ -86,7 +253,7 @@ const VolunteerDashboard = () => {
           <div className="lg:col-span-2">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-3xl font-bold">My Organizations</h2>
-              <Button variant="hero" size="sm" className="gap-2">
+              <Button variant="hero" size="sm" className="gap-2" onClick={() => setShowJoinDialog(true)}>
                 <Plus className="w-4 h-4" />
                 Join Organization
               </Button>
@@ -106,7 +273,10 @@ const VolunteerDashboard = () => {
               ))}
 
               {/* Add New Org Card */}
-              <Card className="p-6 bg-card/70 backdrop-blur-sm border-dashed border-2 border-border hover:border-primary/50 transition-all duration-300 cursor-pointer group flex items-center justify-center min-h-[180px]">
+              <Card 
+                className="p-6 bg-card/70 backdrop-blur-sm border-dashed border-2 border-border hover:border-primary/50 transition-all duration-300 cursor-pointer group flex items-center justify-center min-h-[180px]"
+                onClick={() => setShowJoinDialog(true)}
+              >
                 <div className="text-center">
                   <Plus className="w-10 h-10 text-muted-foreground group-hover:text-primary mx-auto mb-3 transition-colors" />
                   <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors font-medium">
@@ -122,9 +292,39 @@ const VolunteerDashboard = () => {
       <MemberQRCode
         isOpen={showQRCode}
         onClose={() => setShowQRCode(false)}
-        memberId={member.id}
-        memberName={member.name}
+        memberId={member?.id || ""}
+        memberName={member?.full_name || "Volunteer"}
       />
+
+      <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Join Organization</DialogTitle>
+            <DialogDescription>
+              Enter the invite code provided by the organization administrator
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="invite-code">Invite Code</Label>
+              <Input
+                id="invite-code"
+                placeholder="Enter code"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setShowJoinDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleJoinOrganization}>
+                Join
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

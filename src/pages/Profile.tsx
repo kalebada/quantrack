@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,22 +13,89 @@ import { toast } from "sonner";
 const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  
-  // Mock data - will be replaced with actual data from Supabase
+  const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState({
-    fullName: "John Smith",
-    email: "john.smith@example.com",
+    fullName: "",
+    email: "",
     phone: "",
     bio: "",
     school: "",
     avatarUrl: "",
   });
 
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+
+      setUserId(user.id);
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      const { data: volunteerData } = await supabase
+        .from("volunteer_profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (profileData) {
+        setProfile({
+          fullName: profileData.full_name || "",
+          email: profileData.email || "",
+          phone: "",
+          bio: "",
+          school: volunteerData?.school_organization || "",
+          avatarUrl: "",
+        });
+      }
+    } catch (error) {
+      console.error("Error loading profile:", error);
+      toast.error("Failed to load profile");
+    }
+  };
+
   const handleSave = async () => {
+    if (!userId) return;
+    
     setLoading(true);
-    // TODO: Save to Supabase
-    toast.success("Profile updated successfully!");
-    setLoading(false);
+    try {
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          full_name: profile.fullName,
+          email: profile.email,
+        })
+        .eq("id", userId);
+
+      if (profileError) throw profileError;
+
+      const { error: volunteerError } = await supabase
+        .from("volunteer_profiles")
+        .update({
+          school_organization: profile.school,
+        })
+        .eq("id", userId);
+
+      if (volunteerError) throw volunteerError;
+
+      toast.success("Profile updated successfully!");
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      toast.error("Failed to save profile");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

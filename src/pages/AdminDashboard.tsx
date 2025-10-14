@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Users, Calendar, CheckCircle, Settings, QrCode, UserPlus, Award as AwardIcon, Clock, ChevronDown, ListTodo } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +20,77 @@ import { SettingsDialog } from "@/components/SettingsDialog";
 
 const AdminDashboard = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [organization, setOrganization] = useState<any>(null);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+
+      // Check if user is admin
+      const { data: hasAdminRole } = await supabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'admin'
+      });
+
+      if (!hasAdminRole) {
+        navigate("/volunteer");
+        return;
+      }
+
+      await loadOrganization(user.id);
+    } catch (error) {
+      console.error("Auth error:", error);
+      navigate("/login");
+    }
+  };
+
+  const loadOrganization = async (userId: string) => {
+    try {
+      const { data: adminProfile } = await supabase
+        .from("admin_profiles")
+        .select("organization_id, organizations!inner(*)")
+        .eq("id", userId)
+        .single();
+
+      if (adminProfile) {
+        setOrganization(adminProfile.organizations);
+      }
+    } catch (error) {
+      console.error("Error loading organization:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load organization data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
   // Mock data for active volunteers over time
   const volunteerData = [
     { month: "Jan", volunteers: 45 },
@@ -86,7 +160,7 @@ const AdminDashboard = () => {
               <Settings className="w-4 h-4 mr-2" />
               Settings
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleLogout}>
               Logout
             </Button>
           </div>
@@ -102,7 +176,7 @@ const AdminDashboard = () => {
                 <img src={logo} alt="Organization Logo" className="w-16 h-16" />
               </div>
               <div className="flex-1">
-                <h1 className="text-3xl font-bold mb-2">Community Food Bank</h1>
+                <h1 className="text-3xl font-bold mb-2">{organization?.name || "Your Organization"}</h1>
                 <p className="text-muted-foreground">Manage your organization and volunteers</p>
               </div>
             </div>
