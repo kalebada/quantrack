@@ -57,19 +57,20 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
         }
 
         if (mounted) {
+          // Load data sequentially to better handle errors
           await loadData();
           await loadLeaderboard();
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error initializing organization data:", error);
         if (mounted) {
           setLoading(false);
           toast({
             title: "Error",
-            description: "Failed to load organization data",
+            description: error.message || "Failed to load organization data",
             variant: "destructive",
           });
-          setTimeout(() => onBack(), 100);
+          setTimeout(() => onBack(), 1000);
         }
       } finally {
         if (mounted) {
@@ -168,28 +169,33 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
   ];
 
   const loadLeaderboard = async () => {
-    const { data, error } = await supabase
-      .from("organization_members")
-      .select("volunteer_id, total_hours, profiles!organization_members_volunteer_id_fkey(full_name)")
-      .eq("organization_id", organizationId)
-      .eq("status", "active")
-      .order("total_hours", { ascending: false })
-      .limit(10);
+    try {
+      const { data, error } = await supabase
+        .from("organization_members")
+        .select("volunteer_id, total_hours, profiles!organization_members_volunteer_id_fkey(full_name)")
+        .eq("organization_id", organizationId)
+        .eq("status", "active")
+        .order("total_hours", { ascending: false })
+        .limit(10);
 
-    if (error) {
-      console.error("Error loading leaderboard:", error);
-      return;
-    }
+      if (error) {
+        console.error("Error loading leaderboard:", error);
+        return;
+      }
 
-    if (data) {
-      const formatted = data.map((m: any, index: number) => ({
-        id: m.volunteer_id,
-        name: m.profiles?.full_name || "Unknown",
-        avatarUrl: "",
-        totalHours: m.total_hours || 0,
-        rank: index + 1,
-      }));
-      setLeaderboardMembers(formatted);
+      if (data) {
+        const formatted = data.map((m: any, index: number) => ({
+          id: m.volunteer_id,
+          name: m.profiles?.full_name || "Unknown",
+          avatarUrl: "",
+          totalHours: m.total_hours || 0,
+          rank: index + 1,
+        }));
+        setLeaderboardMembers(formatted);
+      }
+    } catch (error) {
+      console.error("Leaderboard loading error:", error);
+      // Don't throw, just log - leaderboard is not critical
     }
   };
 
