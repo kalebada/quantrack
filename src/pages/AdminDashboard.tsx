@@ -38,17 +38,6 @@ const AdminDashboard = () => {
         return;
       }
 
-      // Check if user is admin
-      const { data: hasAdminRole } = await supabase.rpc('has_role', {
-        _user_id: user.id,
-        _role: 'admin'
-      });
-
-      if (!hasAdminRole) {
-        navigate("/volunteer");
-        return;
-      }
-
       await loadOrganization(user.id);
     } catch (error) {
       console.error("Auth error:", error);

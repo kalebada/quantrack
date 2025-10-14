@@ -38,17 +38,6 @@ const VolunteerDashboard = () => {
         return;
       }
 
-      // Check if user is volunteer
-      const { data: hasVolunteerRole } = await supabase.rpc('has_role', {
-        _user_id: user.id,
-        _role: 'volunteer'
-      });
-
-      if (!hasVolunteerRole) {
-        navigate("/admin");
-        return;
-      }
-
       await loadUserData(user.id);
     } catch (error) {
       console.error("Auth error:", error);
