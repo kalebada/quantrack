@@ -80,7 +80,9 @@ export const TasksCard = () => {
         setTasks(formattedTasks);
       }
     } catch (error) {
-      console.error("Error fetching tasks:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error fetching tasks:", error);
+      }
     } finally {
       setLoading(false);
     }
@@ -97,7 +99,9 @@ export const TasksCard = () => {
       setSelectedTask(null);
       fetchTasks();
     } catch (error) {
-      console.error("Error completing task:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error completing task:", error);
+      }
       toast({ title: "Error", description: "Failed to complete task", variant: "destructive" });
     }
   };

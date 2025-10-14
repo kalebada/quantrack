@@ -69,7 +69,9 @@ const ManageEvents = () => {
         setEvents(eventsData);
       }
     } catch (error) {
-      console.error("Error fetching events:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error fetching events:", error);
+      }
     } finally {
       setLoading(false);
     }
@@ -143,7 +145,9 @@ const ManageEvents = () => {
       resetForm();
       fetchEvents();
     } catch (error) {
-      console.error("Error creating event:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error creating event:", error);
+      }
       toast({
         title: "Error",
         description: "Failed to create event",

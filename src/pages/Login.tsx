@@ -39,7 +39,7 @@ const Login = () => {
         _role: 'admin'
       });
 
-      if (roleError) {
+      if (roleError && import.meta.env.DEV) {
         console.error('Error checking role:', roleError);
       }
 
@@ -72,7 +72,7 @@ const Login = () => {
           _user_id: data.user.id
         });
 
-        if (setupError) {
+        if (setupError && import.meta.env.DEV) {
           console.error('Error setting up profile:', setupError);
         }
       }

@@ -71,7 +71,9 @@ const EventSignupForm = () => {
       });
       setAnswers(initialAnswers);
     } catch (error) {
-      console.error("Error fetching event:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error fetching event:", error);
+      }
       toast({
         title: "Error",
         description: "Failed to load event details",
@@ -117,7 +119,9 @@ const EventSignupForm = () => {
 
       navigate(-1); // Go back to previous page
     } catch (error: any) {
-      console.error("Error signing up:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error signing up:", error);
+      }
       toast({
         title: "Error",
         description: error.message || "Failed to sign up for event",

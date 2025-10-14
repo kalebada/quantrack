@@ -38,7 +38,9 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         setOrganization(adminProfile.organizations);
       }
     } catch (error) {
-      console.error("Error fetching organization:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error fetching organization:", error);
+      }
     } finally {
       setLoading(false);
     }

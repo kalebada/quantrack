@@ -73,13 +73,15 @@ const VolunteerDashboard = () => {
         _user_id: userId
       });
 
-      if (setupError) {
+      if (setupError && import.meta.env.DEV) {
         console.error('Error setting up profile:', setupError);
       }
 
       await loadUserData(userId);
     } catch (error) {
-      console.error("Auth error:", error);
+      if (import.meta.env.DEV) {
+        console.error("Auth error:", error);
+      }
       toast({
         title: "Error",
         description: "Failed to load your profile",
@@ -101,7 +103,9 @@ const VolunteerDashboard = () => {
         .maybeSingle();
 
       if (profileError) {
-        console.error("Error loading profile:", profileError);
+        if (import.meta.env.DEV) {
+          console.error("Error loading profile:", profileError);
+        }
         throw profileError;
       }
 
@@ -122,7 +126,9 @@ const VolunteerDashboard = () => {
         .eq("status", "active");
 
       if (membershipError) {
-        console.error("Error loading memberships:", membershipError);
+        if (import.meta.env.DEV) {
+          console.error("Error loading memberships:", membershipError);
+        }
         setOrganizations([]);
       } else if (memberships && memberships.length > 0) {
         const orgs = memberships.map((m: any) => ({
@@ -137,7 +143,9 @@ const VolunteerDashboard = () => {
         setOrganizations([]);
       }
     } catch (error) {
-      console.error("Error loading user data:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error loading user data:", error);
+      }
       toast({
         title: "Error",
         description: "Failed to load your data",
@@ -191,7 +199,9 @@ const VolunteerDashboard = () => {
         .rpc('ensure_volunteer_profile', { _user_id: user.id });
 
       if (setupError || !(setupResult as any)?.success) {
-        console.error("Error setting up profile:", setupError || setupResult);
+        if (import.meta.env.DEV) {
+          console.error("Error setting up profile:", setupError || setupResult);
+        }
         toast({
           title: "Setup Error",
           description: "Failed to set up your profile. Please try again.",
@@ -227,7 +237,9 @@ const VolunteerDashboard = () => {
         }]);
 
       if (joinError) {
-        console.error("Error joining organization:", joinError);
+        if (import.meta.env.DEV) {
+          console.error("Error joining organization:", joinError);
+        }
         throw joinError;
       }
 
@@ -242,7 +254,9 @@ const VolunteerDashboard = () => {
       // Reload user data to show the new organization
       await loadUserData(user.id);
     } catch (error: any) {
-      console.error("Error joining organization:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error joining organization:", error);
+      }
       toast({
         title: "Error",
         description: error.message || "Failed to join organization. Please try again.",

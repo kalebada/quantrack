@@ -77,7 +77,7 @@ const AdminDashboard = () => {
         _role: 'admin'
       });
 
-      if (roleError) {
+      if (roleError && import.meta.env.DEV) {
         console.error("Error checking role:", roleError);
       }
 
@@ -93,7 +93,9 @@ const AdminDashboard = () => {
 
       await loadOrganization(userId);
     } catch (error) {
-      console.error("Auth error:", error);
+      if (import.meta.env.DEV) {
+        console.error("Auth error:", error);
+      }
       toast({
         title: "Error",
         description: "Failed to load your admin profile",
@@ -111,7 +113,7 @@ const AdminDashboard = () => {
         .eq("id", userId)
         .maybeSingle();
 
-      if (profileError) {
+      if (profileError && import.meta.env.DEV) {
         console.error("Error loading admin profile:", profileError);
       }
 
@@ -127,7 +129,9 @@ const AdminDashboard = () => {
         navigate("/");
       }
     } catch (error) {
-      console.error("Error loading organization:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error loading organization:", error);
+      }
       toast({
         title: "Error",
         description: "Failed to load organization data",
@@ -167,7 +171,9 @@ const AdminDashboard = () => {
 
       setPendingHours(pending || 0);
     } catch (error) {
-      console.error("Error loading stats:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error loading stats:", error);
+      }
     }
   };
 

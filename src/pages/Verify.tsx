@@ -54,7 +54,9 @@ const Verify = () => {
 
       toast.error("No matching certificate or member ID found");
     } catch (error: any) {
-      console.error("Verification error:", error);
+      if (import.meta.env.DEV) {
+        console.error("Verification error:", error);
+      }
       toast.error("Verification failed. Please check the code and try again.");
     } finally {
       setLoading(false);

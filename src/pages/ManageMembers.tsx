@@ -66,7 +66,9 @@ const ManageMembers = () => {
         setMembers(formatted);
       }
     } catch (error) {
-      console.error("Error fetching members:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error fetching members:", error);
+      }
       toast({
         title: "Error",
         description: "Failed to load members",

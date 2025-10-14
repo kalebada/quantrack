@@ -99,7 +99,9 @@ const AssignTasks = () => {
         setMembers(formattedMembers);
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error fetching data:", error);
+      }
     } finally {
       setLoading(false);
     }
@@ -158,7 +160,9 @@ const AssignTasks = () => {
       });
       fetchAdminData();
     } catch (error) {
-      console.error("Error creating task:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error creating task:", error);
+      }
       toast({ title: "Error", description: "Failed to create task", variant: "destructive" });
     }
   };
@@ -169,7 +173,9 @@ const AssignTasks = () => {
       toast({ title: "Success", description: "Task deleted successfully" });
       fetchAdminData();
     } catch (error) {
-      console.error("Error deleting task:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error deleting task:", error);
+      }
       toast({ title: "Error", description: "Failed to delete task", variant: "destructive" });
     }
   };

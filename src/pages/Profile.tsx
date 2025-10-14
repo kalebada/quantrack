@@ -60,7 +60,9 @@ const Profile = () => {
         });
       }
     } catch (error) {
-      console.error("Error loading profile:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error loading profile:", error);
+      }
       toast.error("Failed to load profile");
     }
   };
@@ -91,7 +93,9 @@ const Profile = () => {
 
       toast.success("Profile updated successfully!");
     } catch (error) {
-      console.error("Error saving profile:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error saving profile:", error);
+      }
       toast.error("Failed to save profile");
     } finally {
       setLoading(false);

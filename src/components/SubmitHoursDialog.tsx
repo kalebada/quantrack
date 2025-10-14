@@ -76,7 +76,9 @@ export const SubmitHoursDialog = ({ isOpen, onClose, organizationId }: SubmitHou
       setDescription("");
       onClose();
     } catch (error) {
-      console.error("Error submitting hours:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error submitting hours:", error);
+      }
       toast({
         title: "Error",
         description: "Failed to submit hours",

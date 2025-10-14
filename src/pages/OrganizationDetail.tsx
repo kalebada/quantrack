@@ -90,7 +90,9 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
         setRecentActivity(formattedSessions);
       }
     } catch (error) {
-      console.error("Error loading events:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error loading events:", error);
+      }
     }
   };
 
@@ -111,7 +113,9 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
         .limit(10);
 
       if (error) {
-        console.error("Error loading leaderboard:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error loading leaderboard:", error);
+        }
         return;
       }
 
@@ -126,7 +130,9 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
         setLeaderboardMembers(formatted);
       }
     } catch (error) {
-      console.error("Leaderboard loading error:", error);
+      if (import.meta.env.DEV) {
+        console.error("Leaderboard loading error:", error);
+      }
       // Don't throw, just log - leaderboard is not critical
     }
   };
@@ -166,7 +172,9 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
           await loadEvents();
         }
       } catch (error: any) {
-        console.error("Error initializing organization data:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error initializing organization data:", error);
+        }
         if (mounted) {
           setLoading(false);
           toast({
@@ -206,7 +214,9 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
       .maybeSingle();
 
     if (orgError) {
-      console.error("Error loading organization:", orgError);
+      if (import.meta.env.DEV) {
+        console.error("Error loading organization:", orgError);
+      }
       throw orgError;
     }
 
@@ -225,7 +235,9 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
       .maybeSingle();
 
     if (memberError) {
-      console.error("Error loading member data:", memberError);
+      if (import.meta.env.DEV) {
+        console.error("Error loading member data:", memberError);
+      }
       throw memberError;
     }
 
