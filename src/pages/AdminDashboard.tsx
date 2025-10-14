@@ -30,24 +30,9 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     let mounted = true;
+    let isInitializing = true;
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-
-      if (event === 'SIGNED_OUT' || !session) {
-        navigate("/login");
-        return;
-      }
-      
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        if (session.user && mounted) {
-          await checkAuth(session.user.id);
-        }
-      }
-    });
-
-    // Check for existing session
+    // Check for existing session first
     const initAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!mounted) return;
@@ -56,9 +41,24 @@ const AdminDashboard = () => {
         await checkAuth(session.user.id);
       } else {
         setLoading(false);
-        navigate("/login");
+        navigate("/login", { replace: true });
       }
+      isInitializing = false;
     };
+
+    // Set up auth state listener (only respond after initialization)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted || isInitializing) return;
+
+      if (event === 'SIGNED_OUT') {
+        navigate("/login", { replace: true });
+        return;
+      }
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        await checkAuth(session.user.id);
+      }
+    });
 
     initAuth();
 
@@ -224,23 +224,23 @@ const AdminDashboard = () => {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>Admin Actions</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => window.location.href = '/manage-events'}>
+                <DropdownMenuItem onClick={() => navigate('/manage-events')}>
                   <Calendar className="w-4 h-4 mr-2" />
                   Manage Events
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => window.location.href = '/manage-members'}>
+                <DropdownMenuItem onClick={() => navigate('/manage-members')}>
                   <Users className="w-4 h-4 mr-2" />
                   Manage Members
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => window.location.href = '/approve-hours'}>
+                <DropdownMenuItem onClick={() => navigate('/approve-hours')}>
                   <CheckCircle className="w-4 h-4 mr-2" />
                   Approve Hours
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => window.location.href = '/qr-attendance'}>
+                <DropdownMenuItem onClick={() => navigate('/qr-attendance')}>
                   <QrCode className="w-4 h-4 mr-2" />
                   QR Attendance
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => window.location.href = '/assign-tasks'}>
+                <DropdownMenuItem onClick={() => navigate('/assign-tasks')}>
                   <ListTodo className="w-4 h-4 mr-2" />
                   Assign Tasks
                 </DropdownMenuItem>
@@ -313,62 +313,74 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
-
-        {/* Quick Actions */}
-        <Card className="bg-card border-border">
+        {/* Active Members Graph */}
+        <Card className="mb-8 bg-card border-border">
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle>Active Members Over Time</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Button 
-                variant="outline" 
-                className="h-24 flex flex-col gap-2"
-                onClick={() => navigate("/manage-members")}
-              >
-                <Users className="w-6 h-6" />
-                <span>Manage Members</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="h-24 flex flex-col gap-2"
-                onClick={() => navigate("/manage-events")}
-              >
-                <Calendar className="w-6 h-6" />
-                <span>Manage Events</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="h-24 flex flex-col gap-2"
-                onClick={() => navigate("/approve-hours")}
-              >
-                <CheckCircle className="w-6 h-6" />
-                <span>Approve Hours</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="h-24 flex flex-col gap-2"
-                onClick={() => navigate("/assign-tasks")}
-              >
-                <ListTodo className="w-6 h-6" />
-                <span>Assign Tasks</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="h-24 flex flex-col gap-2"
-                onClick={() => navigate("/qr-attendance")}
-              >
-                <QrCode className="w-6 h-6" />
-                <span>QR Attendance</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="h-24 flex flex-col gap-2"
-                onClick={() => setSettingsOpen(true)}
-              >
-                <Settings className="w-6 h-6" />
-                <span>Settings</span>
-              </Button>
+            <ChartContainer
+              config={{
+                volunteers: {
+                  label: "Active Members",
+                  color: "hsl(var(--primary))",
+                },
+              }}
+              className="h-[300px] w-full"
+            >
+              <AreaChart data={volunteerData}>
+                <defs>
+                  <linearGradient id="colorVolunteers" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
+                  dataKey="month" 
+                  className="text-xs"
+                  stroke="hsl(var(--muted-foreground))"
+                />
+                <YAxis 
+                  className="text-xs"
+                  stroke="hsl(var(--muted-foreground))"
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Area
+                  type="monotone"
+                  dataKey="volunteers"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorVolunteers)"
+                />
+              </AreaChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity */}
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {recentActivity.map((activity, index) => {
+                const Icon = activity.icon;
+                return (
+                  <div key={index} className="flex items-start gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm">{activity.name}</p>
+                      <p className="text-sm text-muted-foreground">{activity.detail}</p>
+                    </div>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">{activity.time}</span>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>

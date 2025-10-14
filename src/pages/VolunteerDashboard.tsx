@@ -27,24 +27,9 @@ const VolunteerDashboard = () => {
 
   useEffect(() => {
     let mounted = true;
+    let isInitializing = true;
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-
-      if (event === 'SIGNED_OUT' || !session) {
-        navigate("/login");
-        return;
-      }
-      
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        if (session.user && mounted) {
-          await checkAuth(session.user.id);
-        }
-      }
-    });
-
-    // Check for existing session
+    // Check for existing session first
     const initAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!mounted) return;
@@ -53,9 +38,24 @@ const VolunteerDashboard = () => {
         await checkAuth(session.user.id);
       } else {
         setLoading(false);
-        navigate("/login");
+        navigate("/login", { replace: true });
       }
+      isInitializing = false;
     };
+
+    // Set up auth state listener (only respond after initialization)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted || isInitializing) return;
+
+      if (event === 'SIGNED_OUT') {
+        navigate("/login", { replace: true });
+        return;
+      }
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        await checkAuth(session.user.id);
+      }
+    });
 
     initAuth();
 
@@ -267,7 +267,17 @@ const VolunteerDashboard = () => {
     return (
       <OrganizationDetail
         organizationId={selectedOrgId}
-        onBack={() => setSelectedOrgId(null)}
+        onBack={() => {
+          setSelectedOrgId(null);
+          // Force reload of user data when coming back
+          const checkSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+              await loadUserData(session.user.id);
+            }
+          };
+          checkSession();
+        }}
       />
     );
   }

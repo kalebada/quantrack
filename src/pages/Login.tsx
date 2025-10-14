@@ -17,8 +17,9 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [activeTab, setActiveTab] = useState("volunteer");
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent, expectedRole: 'volunteer' | 'admin') => {
     e.preventDefault();
     setLoading(true);
 
@@ -32,15 +33,6 @@ const Login = () => {
 
       if (error) throw error;
 
-      // Ensure user profile is set up
-      const { error: setupError } = await supabase.rpc('ensure_volunteer_profile', {
-        _user_id: data.user.id
-      });
-
-      if (setupError) {
-        console.error('Error setting up profile:', setupError);
-      }
-
       // Check user role
       const { data: isAdmin, error: roleError } = await supabase.rpc('has_role', {
         _user_id: data.user.id,
@@ -49,6 +41,40 @@ const Login = () => {
 
       if (roleError) {
         console.error('Error checking role:', roleError);
+      }
+
+      // Validate role matches selected tab
+      if (expectedRole === 'admin' && !isAdmin) {
+        await supabase.auth.signOut();
+        toast({
+          title: "Access Denied",
+          description: "This account is not an admin. Please use the Member login.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (expectedRole === 'volunteer' && isAdmin) {
+        await supabase.auth.signOut();
+        toast({
+          title: "Wrong Login Portal",
+          description: "Admin accounts should use the Team Admin login.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Ensure volunteer profile is set up for volunteers
+      if (!isAdmin) {
+        const { error: setupError } = await supabase.rpc('ensure_volunteer_profile', {
+          _user_id: data.user.id
+        });
+
+        if (setupError) {
+          console.error('Error setting up profile:', setupError);
+        }
       }
 
       toast({
@@ -109,14 +135,14 @@ const Login = () => {
         </div>
 
         <Card className="p-6 bg-card/70 backdrop-blur-xl border-border shadow-glass">
-          <Tabs defaultValue="volunteer" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="volunteer">Member</TabsTrigger>
               <TabsTrigger value="admin">Team Admin</TabsTrigger>
             </TabsList>
 
             <TabsContent value="volunteer" className="space-y-4">
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={(e) => handleLogin(e, 'volunteer')} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="volunteer-email">Email</Label>
                   <Input
@@ -177,7 +203,7 @@ const Login = () => {
             </TabsContent>
 
             <TabsContent value="admin" className="space-y-4">
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={(e) => handleLogin(e, 'admin')} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="admin-email">Email</Label>
                   <Input
