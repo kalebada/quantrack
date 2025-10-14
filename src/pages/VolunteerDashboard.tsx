@@ -58,6 +58,33 @@ const VolunteerDashboard = () => {
         setMember(profile);
       }
 
+      // Ensure volunteer profile exists (for users who signed up before the fix)
+      const { data: volProfile } = await supabase
+        .from("volunteer_profiles")
+        .select("id")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (!volProfile) {
+        console.log("Creating missing volunteer profile...");
+        const { error: profileError } = await supabase
+          .from("volunteer_profiles")
+          .insert([{
+            id: userId,
+            date_of_birth: "2000-01-01",
+            school_organization: "",
+          }]);
+
+        if (profileError) {
+          console.error("Error creating volunteer profile:", profileError);
+          toast({
+            title: "Setup Required",
+            description: "Please complete your volunteer profile in settings",
+            variant: "destructive",
+          });
+        }
+      }
+
       // Load organizations
       const { data: memberships } = await supabase
         .from("organization_members")
@@ -121,41 +148,13 @@ const VolunteerDashboard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Ensure volunteer profile exists (for users who signed up before the fix)
-      const { data: volProfile } = await supabase
-        .from("volunteer_profiles")
-        .select("id")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (!volProfile) {
-        // Create volunteer profile if it doesn't exist
-        const { error: profileError } = await supabase
-          .from("volunteer_profiles")
-          .insert([{
-            id: user.id,
-            date_of_birth: "2000-01-01",
-            school_organization: "",
-          }]);
-
-        if (profileError) {
-          console.error("Error creating volunteer profile:", profileError);
-          toast({
-            title: "Error",
-            description: "Failed to create volunteer profile. Please try again.",
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-
       // Check if already a member
       const { data: existing } = await supabase
         .from("organization_members")
         .select("id")
         .eq("volunteer_id", user.id)
         .eq("organization_id", org.id)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         toast({
@@ -189,7 +188,7 @@ const VolunteerDashboard = () => {
       console.error("Error joining organization:", error);
       toast({
         title: "Error",
-        description: "Failed to join organization",
+        description: "Failed to join organization. Please try again.",
         variant: "destructive",
       });
     }
