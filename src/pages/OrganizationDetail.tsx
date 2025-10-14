@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { SubmitHoursDialog } from "@/components/SubmitHoursDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +29,9 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
   const [leaderboardMembers, setLeaderboardMembers] = useState<any[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [userSignups, setUserSignups] = useState<string[]>([]);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const loadEvents = async () => {
     try {
@@ -54,6 +57,16 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
           roleTag: "Volunteer",
         }));
         setUpcomingEvents(formattedUpcoming);
+      }
+
+      // Load user signups to show RSVP badges
+      const { data: signupsData } = await supabase
+        .from("event_signups")
+        .select("event_id")
+        .eq("volunteer_id", user.id);
+
+      if (signupsData) {
+        setUserSignups(signupsData.map(s => s.event_id));
       }
 
       // Load recent attended sessions
@@ -379,98 +392,93 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
           </CardContent>
         </Card>
 
-        {/* Events Section with Tabs */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          <Card className="lg:col-span-2 bg-card/70 backdrop-blur-sm border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarIcon className="w-5 h-5 text-primary" />
-                Events
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="upcoming">
-                <TabsList className="grid w-full grid-cols-2 mb-4">
-                  <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-                  <TabsTrigger value="recent">Recent Attended</TabsTrigger>
-                </TabsList>
+        {/* Events Section */}
+        <Card className="mb-8 bg-card/70 backdrop-blur-sm border-border">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarIcon className="w-5 h-5 text-primary" />
+              Events
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="upcoming">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                <TabsTrigger value="recent">Recent Attended</TabsTrigger>
+              </TabsList>
 
-                <TabsContent value="upcoming" className="space-y-3">
-                  {upcomingEvents.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No upcoming events</p>
-                  ) : (
-                    upcomingEvents.map((event) => (
-                    <div
-                      key={event.id}
-                      className="p-4 rounded-lg bg-background/50 border border-border hover:border-primary/50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-semibold mb-1">{event.title}</h4>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {event.date} • {event.time}
-                          </p>
-                          <Badge variant="outline" className="text-xs">
-                            {event.roleTag}
-                          </Badge>
-                        </div>
-                        <Button variant="glass" size="sm">
-                          View
-                        </Button>
-                      </div>
-                    </div>
-                    ))
-                  )}
-                </TabsContent>
-
-                <TabsContent value="recent" className="space-y-3">
-                  {recentActivity.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No recent activity</p>
-                  ) : (
-                    recentActivity.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="p-4 rounded-lg bg-background/50 border border-border"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Clock className="w-4 h-4 text-primary" />
-                            <h4 className="font-semibold">{activity.title}</h4>
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-2">{activity.date}</p>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="default" className="bg-primary/10 text-primary border-0 text-xs">
-                              {activity.status}
+              <TabsContent value="upcoming" className="space-y-3">
+                {upcomingEvents.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No upcoming events</p>
+                ) : (
+                  upcomingEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    className="p-4 rounded-lg bg-background/50 border border-border hover:border-primary/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold">{event.title}</h4>
+                          {userSignups.includes(event.id) && (
+                            <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-xs">
+                              RSVP
                             </Badge>
-                            <span className="text-sm font-medium text-primary">
-                              {formatHours(activity.hours)}
-                            </span>
-                          </div>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {event.date} • {event.time}
+                        </p>
+                        <Badge variant="outline" className="text-xs">
+                          {event.roleTag}
+                        </Badge>
+                      </div>
+                      <Button 
+                        variant="glass" 
+                        size="sm"
+                        onClick={() => navigate(`/event-signup/${event.id}`)}
+                      >
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                  ))
+                )}
+              </TabsContent>
+
+              <TabsContent value="recent" className="space-y-3">
+                {recentActivity.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No recent activity</p>
+                ) : (
+                  recentActivity.map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="p-4 rounded-lg bg-background/50 border border-border"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Clock className="w-4 h-4 text-primary" />
+                          <h4 className="font-semibold">{activity.title}</h4>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">{activity.date}</p>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="default" className="bg-primary/10 text-primary border-0 text-xs">
+                            {activity.status}
+                          </Badge>
+                          <span className="text-sm font-medium text-primary">
+                            {formatHours(activity.hours)}
+                          </span>
                         </div>
                       </div>
                     </div>
-                    ))
-                  )}
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card/70 backdrop-blur-sm border-border">
-            <CardHeader>
-              <CardTitle className="text-lg">Event Calendar</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                className="rounded-md border-0"
-              />
-            </CardContent>
-          </Card>
-        </div>
+                  </div>
+                  ))
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
 
       <SubmitHoursDialog

@@ -288,7 +288,7 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => navigate('/manage-events')}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>

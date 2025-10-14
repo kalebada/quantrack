@@ -97,6 +97,119 @@ export type Database = {
           },
         ]
       }
+      event_attendance: {
+        Row: {
+          checked_in_at: string
+          event_id: string
+          id: string
+          volunteer_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          event_id: string
+          id?: string
+          volunteer_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          event_id?: string
+          id?: string
+          volunteer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_attendance_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_attendance_volunteer_id_fkey"
+            columns: ["volunteer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_questions: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          is_required: boolean
+          question_order: number
+          question_text: string
+          question_type: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          is_required?: boolean
+          question_order: number
+          question_text: string
+          question_type?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          is_required?: boolean
+          question_order?: number
+          question_text?: string
+          question_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_questions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_signups: {
+        Row: {
+          answers: Json
+          event_id: string
+          id: string
+          signed_up_at: string
+          volunteer_id: string
+        }
+        Insert: {
+          answers?: Json
+          event_id: string
+          id?: string
+          signed_up_at?: string
+          volunteer_id: string
+        }
+        Update: {
+          answers?: Json
+          event_id?: string
+          id?: string
+          signed_up_at?: string
+          volunteer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_signups_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_signups_volunteer_id_fkey"
+            columns: ["volunteer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string
@@ -107,6 +220,7 @@ export type Database = {
           id: string
           location: string
           max_volunteers: number | null
+          member_roles: string[] | null
           name: string
           organization_id: string
           start_time: string
@@ -122,6 +236,7 @@ export type Database = {
           id?: string
           location: string
           max_volunteers?: number | null
+          member_roles?: string[] | null
           name: string
           organization_id: string
           start_time: string
@@ -137,6 +252,7 @@ export type Database = {
           id?: string
           location?: string
           max_volunteers?: number | null
+          member_roles?: string[] | null
           name?: string
           organization_id?: string
           start_time?: string

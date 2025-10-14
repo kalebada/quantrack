@@ -16,6 +16,7 @@ import AssignTasks from "./pages/AssignTasks";
 import Verify from "./pages/Verify";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import EventSignupForm from "./pages/EventSignupForm";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/approve-hours" element={<ApproveHours />} />
           <Route path="/qr-attendance" element={<QRAttendance />} />
           <Route path="/assign-tasks" element={<AssignTasks />} />
+          <Route path="/event-signup/:eventId" element={<EventSignupForm />} />
           <Route path="/verify" element={<Verify />} />
           <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
