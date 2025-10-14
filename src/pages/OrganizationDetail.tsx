@@ -28,10 +28,34 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
   const { toast } = useToast();
 
   useEffect(() => {
-    if (organizationId) {
-      loadData();
-      loadLeaderboard();
-    }
+    let mounted = true;
+
+    const initializeData = async () => {
+      if (!organizationId) return;
+      
+      // Check auth first
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session && mounted) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to view this page",
+          variant: "destructive",
+        });
+        onBack();
+        return;
+      }
+
+      if (mounted) {
+        await loadData();
+        await loadLeaderboard();
+      }
+    };
+
+    initializeData();
+
+    return () => {
+      mounted = false;
+    };
   }, [organizationId]);
 
   const loadData = async () => {

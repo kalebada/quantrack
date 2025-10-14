@@ -29,21 +29,38 @@ const AdminDashboard = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
         navigate("/login");
         return;
       }
+      
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+        if (session.user) {
+          await checkAuth(session.user.id);
+        }
+      }
+    });
 
+    // Then check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        checkAuth(session.user.id);
+      } else {
+        setLoading(false);
+        navigate("/login");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const checkAuth = async (userId: string) => {
+    try {
       // Verify user is admin
       const { data: isAdmin, error: roleError } = await supabase.rpc('has_role', {
-        _user_id: user.id,
+        _user_id: userId,
         _role: 'admin'
       });
 
@@ -61,9 +78,14 @@ const AdminDashboard = () => {
         return;
       }
 
-      await loadOrganization(user.id);
+      await loadOrganization(userId);
     } catch (error) {
       console.error("Auth error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load your admin profile. Please try logging in again.",
+        variant: "destructive",
+      });
       navigate("/login");
     }
   };

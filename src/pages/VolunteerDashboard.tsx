@@ -26,56 +26,77 @@ const VolunteerDashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
         navigate("/login");
         return;
       }
+      
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+        if (session.user) {
+          await checkAuth(session.user.id);
+        }
+      }
+    });
 
+    // Then check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        checkAuth(session.user.id);
+      } else {
+        setLoading(false);
+        navigate("/login");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const checkAuth = async (userId: string) => {
+    try {
       // Ensure user profile is set up
       const { error: setupError } = await supabase.rpc('ensure_volunteer_profile', {
-        _user_id: user.id
+        _user_id: userId
       });
 
       if (setupError) {
         console.error('Error setting up profile:', setupError);
       }
 
-      await loadUserData(user.id);
+      await loadUserData(userId);
     } catch (error) {
       console.error("Auth error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load your profile. Please try logging in again.",
+        variant: "destructive",
+      });
       navigate("/login");
     }
   };
 
   const loadUserData = async (userId: string) => {
     try {
-      // Use the helper function to ensure all profiles exist
-      const { data: setupResult, error: setupError } = await supabase
-        .rpc('ensure_volunteer_profile', { _user_id: userId });
-
-      if (setupError) {
-        console.error("Error setting up profile:", setupError);
-      }
-
+      setLoading(true);
+      
       // Load profile data
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .maybeSingle();
 
+      if (profileError) {
+        console.error("Error loading profile:", profileError);
+        throw profileError;
+      }
+
       if (profile) {
         setMember(profile);
       }
 
-      // Load organizations
+      // Load organizations with explicit error handling
       const { data: memberships, error: membershipError } = await supabase
         .from("organization_members")
         .select(`
@@ -89,9 +110,13 @@ const VolunteerDashboard = () => {
 
       if (membershipError) {
         console.error("Error loading memberships:", membershipError);
-      }
-
-      if (memberships && memberships.length > 0) {
+        toast({
+          title: "Error Loading Organizations",
+          description: "Could not load your organizations. Please try again.",
+          variant: "destructive",
+        });
+        setOrganizations([]);
+      } else if (memberships && memberships.length > 0) {
         const orgs = memberships.map((m: any) => ({
           id: m.organization_id,
           name: m.organizations.name,
@@ -107,9 +132,10 @@ const VolunteerDashboard = () => {
       console.error("Error loading user data:", error);
       toast({
         title: "Error",
-        description: "Failed to load your data. Please refresh the page.",
+        description: "Failed to load your data. Please try logging in again.",
         variant: "destructive",
       });
+      setOrganizations([]);
     } finally {
       setLoading(false);
     }
