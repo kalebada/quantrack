@@ -96,13 +96,35 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
     { id: 3, title: "Community Kitchen", date: "Jan 5, 2025", hours: 5.5, status: "Completed" },
   ];
 
-  const leaderboardMembers = [
-    { id: "1", name: "Sarah Johnson", avatarUrl: "", totalHours: 120.5, rank: 1 },
-    { id: "2", name: "Mike Chen", avatarUrl: "", totalHours: 95.25, rank: 2 },
-    { id: "3", name: "Emma Davis", avatarUrl: "", totalHours: 82, rank: 3 },
-    { id: "current-user-id", name: "John Smith", avatarUrl: "", totalHours: member.totalHours, rank: 4 },
-    { id: "5", name: "Alex Rodriguez", avatarUrl: "", totalHours: 58.75, rank: 5 },
-  ];
+  const [leaderboardMembers, setLeaderboardMembers] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadLeaderboard();
+  }, [organizationId]);
+
+  const loadLeaderboard = async () => {
+    try {
+      const { data } = await supabase
+        .from("organization_members")
+        .select("volunteer_id, total_hours, profiles!organization_members_volunteer_id_fkey(full_name)")
+        .eq("organization_id", organizationId)
+        .order("total_hours", { ascending: false })
+        .limit(10);
+
+      if (data) {
+        const formatted = data.map((m: any, index: number) => ({
+          id: m.volunteer_id,
+          name: m.profiles?.full_name || "Unknown",
+          avatarUrl: "",
+          totalHours: m.total_hours || 0,
+          rank: index + 1,
+        }));
+        setLeaderboardMembers(formatted);
+      }
+    } catch (error) {
+      console.error("Error loading leaderboard:", error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">

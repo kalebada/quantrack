@@ -22,6 +22,9 @@ const AdminDashboard = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [organization, setOrganization] = useState<any>(null);
+  const [memberCount, setMemberCount] = useState(0);
+  const [eventCount, setEventCount] = useState(0);
+  const [pendingHours, setPendingHours] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -55,6 +58,7 @@ const AdminDashboard = () => {
 
       if (adminProfile) {
         setOrganization(adminProfile.organizations);
+        await loadStats(adminProfile.organization_id);
       }
     } catch (error) {
       console.error("Error loading organization:", error);
@@ -65,6 +69,39 @@ const AdminDashboard = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadStats = async (orgId: string) => {
+    try {
+      // Get member count
+      const { count: members } = await supabase
+        .from("organization_members")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", orgId)
+        .eq("status", "active");
+
+      setMemberCount(members || 0);
+
+      // Get event count
+      const { count: events } = await supabase
+        .from("events")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", orgId)
+        .eq("status", "upcoming");
+
+      setEventCount(events || 0);
+
+      // Get pending hours count
+      const { count: pending } = await supabase
+        .from("volunteer_sessions")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", orgId)
+        .eq("status", "pending");
+
+      setPendingHours(pending || 0);
+    } catch (error) {
+      console.error("Error loading stats:", error);
     }
   };
 
@@ -172,105 +209,104 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Active Volunteers Analytics */}
-        <Card className="mb-8 bg-card border-border">
+        {/* Stats Cards */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Members</p>
+                  <p className="text-3xl font-bold">{memberCount}</p>
+                </div>
+                <Users className="w-8 h-8 text-primary" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Upcoming Events</p>
+                  <p className="text-3xl font-bold">{eventCount}</p>
+                </div>
+                <Calendar className="w-8 h-8 text-primary" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Pending Hours</p>
+                  <p className="text-3xl font-bold">{pendingHours}</p>
+                </div>
+                <CheckCircle className="w-8 h-8 text-primary" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+
+        {/* Quick Actions */}
+        <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" />
-              Active Volunteers Over Time
-            </CardTitle>
+            <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <ChartContainer
-              config={{
-                volunteers: {
-                  label: "Volunteers",
-                  color: "hsl(var(--primary))",
-                },
-              }}
-              className="h-[300px]"
-            >
-              <AreaChart data={volunteerData}>
-                <defs>
-                  <linearGradient id="colorVolunteers" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="month" className="text-xs" />
-                <YAxis className="text-xs" />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Area
-                  type="monotone"
-                  dataKey="volunteers"
-                  stroke="hsl(var(--primary))"
-                  fillOpacity={1}
-                  fill="url(#colorVolunteers)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ChartContainer>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Button 
+                variant="outline" 
+                className="h-24 flex flex-col gap-2"
+                onClick={() => navigate("/manage-members")}
+              >
+                <Users className="w-6 h-6" />
+                <span>Manage Members</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-24 flex flex-col gap-2"
+                onClick={() => navigate("/manage-events")}
+              >
+                <Calendar className="w-6 h-6" />
+                <span>Manage Events</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-24 flex flex-col gap-2"
+                onClick={() => navigate("/approve-hours")}
+              >
+                <CheckCircle className="w-6 h-6" />
+                <span>Approve Hours</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-24 flex flex-col gap-2"
+                onClick={() => navigate("/assign-tasks")}
+              >
+                <ListTodo className="w-6 h-6" />
+                <span>Assign Tasks</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-24 flex flex-col gap-2"
+                onClick={() => navigate("/qr-attendance")}
+              >
+                <QrCode className="w-6 h-6" />
+                <span>QR Attendance</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-24 flex flex-col gap-2"
+                onClick={() => setSettingsOpen(true)}
+              >
+                <Settings className="w-6 h-6" />
+                <span>Settings</span>
+              </Button>
+            </div>
           </CardContent>
         </Card>
-
-
-        {/* Recent Activity & Upcoming Events */}
-        <div className="grid lg:grid-cols-2 gap-6">
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Recent Activity</h2>
-            <Card className="p-6 bg-card border-border">
-              <div className="space-y-4">
-                {recentActivity.map((activity, i) => {
-                  const Icon = activity.icon;
-                  return (
-                    <div key={i} className="flex items-start gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        activity.type === "joined" ? "bg-green-500/10" :
-                        activity.type === "certificate" ? "bg-primary/10" :
-                        "bg-blue-500/10"
-                      }`}>
-                        <Icon className={`w-5 h-5 ${
-                          activity.type === "joined" ? "text-green-500" :
-                          activity.type === "certificate" ? "text-primary" :
-                          "text-blue-500"
-                        }`} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{activity.name}</p>
-                        <p className="text-sm text-muted-foreground">{activity.detail}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </Card>
-          </div>
-
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Upcoming Events</h2>
-            <Card className="p-6 bg-card border-border">
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-start gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Calendar className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium">Community Cleanup</p>
-                      <p className="text-sm text-muted-foreground">Jan 25, 2025 • 4 hours</p>
-                      <p className="text-xs text-muted-foreground mt-1">32 volunteers registered</p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      Edit
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
-        </div>
       </div>
 
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />

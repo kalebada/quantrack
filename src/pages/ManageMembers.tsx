@@ -1,65 +1,81 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Search, Plus, Shield } from "lucide-react";
+import { ArrowLeft, Search, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDate } from "@/lib/formatters";
 import { getMedalInfo } from "@/lib/formatters";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const ManageMembers = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [memberNotes, setMemberNotes] = useState("");
+  const [members, setMembers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  // Mock members data
-  const members = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      email: "sarah.j@email.com",
-      school: "Central High School",
-      dateJoined: new Date(2024, 8, 15),
-      totalHours: 45,
-      phone: "(555) 123-4567",
-      address: "123 Main St, City, ST 12345",
-      emergencyContact: "Jane Johnson (555) 123-4568",
-      roles: ["Member", "Event Lead"],
-      notes: "Excellent leadership during food drive events.",
-    },
-    {
-      id: 2,
-      name: "Michael Chen",
-      email: "michael.c@email.com",
-      school: "Westside Academy",
-      dateJoined: new Date(2024, 7, 22),
-      totalHours: 78,
-      phone: "(555) 234-5678",
-      address: "456 Oak Ave, City, ST 12345",
-      emergencyContact: "Lisa Chen (555) 234-5679",
-      roles: ["Member", "Volunteer Coordinator"],
-      notes: "Very reliable, always on time.",
-    },
-    {
-      id: 3,
-      name: "Emily Rodriguez",
-      email: "emily.r@email.com",
-      school: "North Valley High",
-      dateJoined: new Date(2024, 9, 5),
-      totalHours: 23,
-      phone: "(555) 345-6789",
-      address: "789 Pine Rd, City, ST 12345",
-      emergencyContact: "Carlos Rodriguez (555) 345-6790",
-      roles: ["Member"],
-      notes: "",
-    },
-  ];
+  useEffect(() => {
+    fetchMembers();
+  }, []);
+
+  const fetchMembers = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: adminProfile } = await supabase
+        .from("admin_profiles")
+        .select("organization_id")
+        .eq("id", user.id)
+        .single();
+
+      if (!adminProfile) return;
+
+      const { data: membersData } = await supabase
+        .from("organization_members")
+        .select(`
+          volunteer_id,
+          member_role,
+          total_hours,
+          joined_at,
+          profiles!organization_members_volunteer_id_fkey(full_name, email),
+          volunteer_profiles!organization_members_volunteer_id_fkey(school_organization)
+        `)
+        .eq("organization_id", adminProfile.organization_id)
+        .eq("status", "active");
+
+      if (membersData) {
+        const formatted = membersData.map((m: any) => ({
+          id: m.volunteer_id,
+          name: m.profiles?.full_name || "Unknown",
+          email: m.profiles?.email || "",
+          school: m.volunteer_profiles?.school_organization || "N/A",
+          dateJoined: new Date(m.joined_at),
+          totalHours: m.total_hours || 0,
+          roles: [m.member_role],
+        }));
+        setMembers(formatted);
+      }
+    } catch (error) {
+      console.error("Error fetching members:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load members",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredMembers = members.filter((member) =>
     member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -95,7 +111,7 @@ const ManageMembers = () => {
         {/* Search and Actions */}
         <Card className="mb-6 bg-card border-border">
           <CardContent className="p-6">
-            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -105,10 +121,6 @@ const ManageMembers = () => {
                   className="pl-10"
                 />
               </div>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Member
-              </Button>
             </div>
           </CardContent>
         </Card>
@@ -119,18 +131,29 @@ const ManageMembers = () => {
             <CardTitle>Members ({filteredMembers.length})</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {/* Header Row */}
-              <div className="grid grid-cols-5 gap-4 pb-2 border-b border-border text-sm font-semibold text-muted-foreground">
-                <div>Name</div>
-                <div>School</div>
-                <div>Date Joined</div>
-                <div>Level</div>
-                <div>Roles</div>
+            {loading ? (
+              <div className="flex items-center justify-center p-8">
+                <p className="text-muted-foreground">Loading members...</p>
               </div>
+            ) : members.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-8 text-center">
+                <Shield className="w-12 h-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Members Yet</h3>
+                <p className="text-muted-foreground">Share your organization's invite code to add members</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {/* Header Row */}
+                <div className="grid grid-cols-5 gap-4 pb-2 border-b border-border text-sm font-semibold text-muted-foreground">
+                  <div>Name</div>
+                  <div>School</div>
+                  <div>Date Joined</div>
+                  <div>Level</div>
+                  <div>Roles</div>
+                </div>
 
-              {/* Member Rows */}
-              {filteredMembers.map((member) => {
+                {/* Member Rows */}
+                {filteredMembers.map((member) => {
                 const medalInfo = getMedalInfo(member.totalHours);
                 return (
                   <div
@@ -170,7 +193,8 @@ const ManageMembers = () => {
                   </div>
                 );
               })}
-            </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -191,22 +215,14 @@ const ManageMembers = () => {
                     <Shield className="w-4 h-4 text-primary" />
                     Contact Information
                   </h3>
-                  <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-xs text-muted-foreground">Email</Label>
                       <p className="text-sm">{selectedMember.email}</p>
                     </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Phone</Label>
-                      <p className="text-sm">{selectedMember.phone}</p>
-                    </div>
                     <div className="col-span-2">
-                      <Label className="text-xs text-muted-foreground">Address</Label>
-                      <p className="text-sm">{selectedMember.address}</p>
-                    </div>
-                    <div className="col-span-2">
-                      <Label className="text-xs text-muted-foreground">Emergency Contact</Label>
-                      <p className="text-sm">{selectedMember.emergencyContact}</p>
+                      <Label className="text-xs text-muted-foreground">School/Organization</Label>
+                      <p className="text-sm">{selectedMember.school}</p>
                     </div>
                   </div>
                 </div>
