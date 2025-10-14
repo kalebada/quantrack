@@ -37,28 +37,42 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
       if (!user) return;
 
       // Load organization
-      const { data: orgData } = await supabase
+      const { data: orgData, error: orgError } = await supabase
         .from("organizations")
         .select("*")
         .eq("id", organizationId)
-        .single();
+        .maybeSingle();
+
+      if (orgError) {
+        console.error("Error loading organization:", orgError);
+      }
 
       if (orgData) {
         setOrganization(orgData);
       }
 
       // Load member hours
-      const { data: memberData } = await supabase
+      const { data: memberData, error: memberError } = await supabase
         .from("organization_members")
         .select("total_hours")
         .eq("volunteer_id", user.id)
         .eq("organization_id", organizationId)
-        .single();
+        .maybeSingle();
+
+      if (memberError) {
+        console.error("Error loading member data:", memberError);
+      }
 
       if (memberData) {
         setMember({
           id: user.id,
           totalHours: memberData.total_hours || 0,
+        });
+      } else {
+        // Set default member data if no membership found
+        setMember({
+          id: user.id,
+          totalHours: 0,
         });
       }
     } catch (error) {
@@ -77,6 +91,17 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!organization || !member) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">Organization not found</p>
+          <Button onClick={onBack}>Back to Dashboard</Button>
+        </div>
       </div>
     );
   }
@@ -146,14 +171,14 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
         {/* Organization Header */}
         <div className="mb-8 flex items-center gap-4">
           <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-4xl border-2 border-primary/30">
-            {organization.logoUrl ? (
-              <img src={organization.logoUrl} alt={organization.name} className="w-full h-full object-cover rounded-2xl" />
+            {organization?.logo_url ? (
+              <img src={organization.logo_url} alt={organization?.name || "Organization"} className="w-full h-full object-cover rounded-2xl" />
             ) : (
               <span>🏢</span>
             )}
           </div>
           <div>
-            <h1 className="text-3xl font-bold mb-1">{organization.name}</h1>
+            <h1 className="text-3xl font-bold mb-1">{organization?.name || "Organization"}</h1>
             <p className="text-muted-foreground">Your engagement hub</p>
           </div>
         </div>
@@ -192,7 +217,7 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
                       <span className="text-sm">Total Hours with Organization</span>
                     </div>
                     <div className="text-5xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-                      {formatHours(member.totalHours)}
+                      {formatHours(member?.totalHours || 0)}
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Earned {medal.name} Medal
@@ -207,14 +232,14 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
                     </div>
                     <div className="text-3xl font-bold">
                       {medal.maxHours
-                        ? `${formatHours(member.totalHours)} / ${formatHours(medal.maxHours)}`
+                        ? `${formatHours(member?.totalHours || 0)} / ${formatHours(medal.maxHours)}`
                         : "Max Level Achieved!"}
                     </div>
                     {medal.maxHours && (
                       <>
                         <Progress value={medalProgress} className="h-3 bg-muted/50" />
                         <p className="text-xs text-muted-foreground">
-                          {formatHours(medal.maxHours - member.totalHours)} until {getMedalInfo(medal.maxHours).name}
+                          {formatHours(medal.maxHours - (member?.totalHours || 0))} until {getMedalInfo(medal.maxHours).name}
                         </p>
                       </>
                     )}
@@ -258,7 +283,7 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
               </TabsContent>
 
               <TabsContent value="leaderboard">
-                <Leaderboard members={leaderboardMembers} currentUserId={member.id} />
+                <Leaderboard members={leaderboardMembers} currentUserId={member?.id || ""} />
               </TabsContent>
             </Tabs>
           </CardContent>
