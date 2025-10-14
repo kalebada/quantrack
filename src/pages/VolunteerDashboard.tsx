@@ -47,70 +47,58 @@ const VolunteerDashboard = () => {
 
   const loadUserData = async (userId: string) => {
     try {
-      // Load profile
+      // Use the helper function to ensure all profiles exist
+      const { data: setupResult, error: setupError } = await supabase
+        .rpc('ensure_volunteer_profile', { _user_id: userId });
+
+      if (setupError) {
+        console.error("Error setting up profile:", setupError);
+      }
+
+      // Load profile data
       const { data: profile } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
       if (profile) {
         setMember(profile);
       }
 
-      // Ensure volunteer profile exists (for users who signed up before the fix)
-      const { data: volProfile } = await supabase
-        .from("volunteer_profiles")
-        .select("id")
-        .eq("id", userId)
-        .maybeSingle();
-
-      if (!volProfile) {
-        console.log("Creating missing volunteer profile...");
-        const { error: profileError } = await supabase
-          .from("volunteer_profiles")
-          .insert([{
-            id: userId,
-            date_of_birth: "2000-01-01",
-            school_organization: "",
-          }]);
-
-        if (profileError) {
-          console.error("Error creating volunteer profile:", profileError);
-          toast({
-            title: "Setup Required",
-            description: "Please complete your volunteer profile in settings",
-            variant: "destructive",
-          });
-        }
-      }
-
       // Load organizations
-      const { data: memberships } = await supabase
+      const { data: memberships, error: membershipError } = await supabase
         .from("organization_members")
         .select(`
           organization_id,
           total_hours,
+          status,
           organizations!inner(id, name, logo_url)
         `)
         .eq("volunteer_id", userId)
         .eq("status", "active");
 
-      if (memberships) {
+      if (membershipError) {
+        console.error("Error loading memberships:", membershipError);
+      }
+
+      if (memberships && memberships.length > 0) {
         const orgs = memberships.map((m: any) => ({
           id: m.organization_id,
           name: m.organizations.name,
           logoUrl: m.organizations.logo_url || "",
-          level: Math.floor(m.total_hours / 10) + 1,
-          totalPoints: m.total_hours,
+          level: Math.floor((m.total_hours || 0) / 10) + 1,
+          totalPoints: m.total_hours || 0,
         }));
         setOrganizations(orgs);
+      } else {
+        setOrganizations([]);
       }
     } catch (error) {
       console.error("Error loading user data:", error);
       toast({
         title: "Error",
-        description: "Failed to load your data",
+        description: "Failed to load your data. Please refresh the page.",
         variant: "destructive",
       });
     } finally {
@@ -129,12 +117,22 @@ const VolunteerDashboard = () => {
     }
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to join an organization",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Find organization by invite code
       const { data: org, error: orgError } = await supabase
         .from("organizations")
-        .select("id")
+        .select("id, name")
         .eq("invite_code", inviteCode.trim())
-        .single();
+        .maybeSingle();
 
       if (orgError || !org) {
         toast({
@@ -145,8 +143,19 @@ const VolunteerDashboard = () => {
         return;
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      // Ensure volunteer profile is set up
+      const { data: setupResult, error: setupError } = await supabase
+        .rpc('ensure_volunteer_profile', { _user_id: user.id });
+
+      if (setupError || !(setupResult as any)?.success) {
+        console.error("Error setting up profile:", setupError || setupResult);
+        toast({
+          title: "Setup Error",
+          description: "Failed to set up your profile. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       // Check if already a member
       const { data: existing } = await supabase
@@ -168,27 +177,32 @@ const VolunteerDashboard = () => {
       // Join organization
       const { error: joinError } = await supabase
         .from("organization_members")
-        .insert({
+        .insert([{
           volunteer_id: user.id,
           organization_id: org.id,
           member_role: "volunteer",
-        });
+        }]);
 
-      if (joinError) throw joinError;
+      if (joinError) {
+        console.error("Error joining organization:", joinError);
+        throw joinError;
+      }
 
       toast({
         title: "Success!",
-        description: "You have joined the organization",
+        description: `You have joined ${org.name}`,
       });
 
       setShowJoinDialog(false);
       setInviteCode("");
+      
+      // Reload user data to show the new organization
       await loadUserData(user.id);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error joining organization:", error);
       toast({
         title: "Error",
-        description: "Failed to join organization. Please try again.",
+        description: error.message || "Failed to join organization. Please try again.",
         variant: "destructive",
       });
     }

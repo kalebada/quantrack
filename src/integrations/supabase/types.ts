@@ -487,6 +487,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: undefined
       }
+      ensure_volunteer_profile: {
+        Args: { _user_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
