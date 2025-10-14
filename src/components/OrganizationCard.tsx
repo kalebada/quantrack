@@ -12,8 +12,8 @@ interface OrganizationCardProps {
 }
 
 export const OrganizationCard = ({ name, logoUrl, totalPoints, onClick }: OrganizationCardProps) => {
-  // Convert points to hours (1 point = 1 minute)
-  const totalHours = totalPoints / 60;
+  // totalPoints is already in hours from the database
+  const totalHours = totalPoints;
   const medal = getMedalInfo(totalHours);
   const progress = getMedalProgress(totalHours);
 

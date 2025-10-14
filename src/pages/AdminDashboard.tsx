@@ -29,32 +29,44 @@ const AdminDashboard = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    let mounted = true;
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+
       if (event === 'SIGNED_OUT' || !session) {
         navigate("/login");
         return;
       }
       
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-        if (session.user) {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session.user && mounted) {
           await checkAuth(session.user.id);
         }
       }
     });
 
-    // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Check for existing session
+    const initAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!mounted) return;
+
       if (session?.user) {
-        checkAuth(session.user.id);
+        await checkAuth(session.user.id);
       } else {
         setLoading(false);
         navigate("/login");
       }
-    });
+    };
 
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    initAuth();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const checkAuth = async (userId: string) => {
     try {
@@ -83,10 +95,10 @@ const AdminDashboard = () => {
       console.error("Auth error:", error);
       toast({
         title: "Error",
-        description: "Failed to load your admin profile. Please try logging in again.",
+        description: "Failed to load your admin profile",
         variant: "destructive",
       });
-      navigate("/login");
+      setLoading(false);
     }
   };
 

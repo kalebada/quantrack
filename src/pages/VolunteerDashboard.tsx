@@ -26,32 +26,44 @@ const VolunteerDashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener first
+    let mounted = true;
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+
       if (event === 'SIGNED_OUT' || !session) {
         navigate("/login");
         return;
       }
       
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-        if (session.user) {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session.user && mounted) {
           await checkAuth(session.user.id);
         }
       }
     });
 
-    // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Check for existing session
+    const initAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!mounted) return;
+
       if (session?.user) {
-        checkAuth(session.user.id);
+        await checkAuth(session.user.id);
       } else {
         setLoading(false);
         navigate("/login");
       }
-    });
+    };
 
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    initAuth();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const checkAuth = async (userId: string) => {
     try {
@@ -69,10 +81,10 @@ const VolunteerDashboard = () => {
       console.error("Auth error:", error);
       toast({
         title: "Error",
-        description: "Failed to load your profile. Please try logging in again.",
+        description: "Failed to load your profile",
         variant: "destructive",
       });
-      navigate("/login");
+      setLoading(false);
     }
   };
 
@@ -96,7 +108,7 @@ const VolunteerDashboard = () => {
         setMember(profile);
       }
 
-      // Load organizations with explicit error handling
+      // Load organizations
       const { data: memberships, error: membershipError } = await supabase
         .from("organization_members")
         .select(`
@@ -110,11 +122,6 @@ const VolunteerDashboard = () => {
 
       if (membershipError) {
         console.error("Error loading memberships:", membershipError);
-        toast({
-          title: "Error Loading Organizations",
-          description: "Could not load your organizations. Please try again.",
-          variant: "destructive",
-        });
         setOrganizations([]);
       } else if (memberships && memberships.length > 0) {
         const orgs = memberships.map((m: any) => ({
@@ -132,7 +139,7 @@ const VolunteerDashboard = () => {
       console.error("Error loading user data:", error);
       toast({
         title: "Error",
-        description: "Failed to load your data. Please try logging in again.",
+        description: "Failed to load your data",
         variant: "destructive",
       });
       setOrganizations([]);

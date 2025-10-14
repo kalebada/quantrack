@@ -29,159 +29,107 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
 
   useEffect(() => {
     let mounted = true;
-    console.log("OrganizationDetail: useEffect triggered", { organizationId });
 
     const initializeData = async () => {
-      console.log("OrganizationDetail: initializeData starting", { organizationId, mounted });
-      
       if (!organizationId) {
-        console.log("OrganizationDetail: No organizationId, setting loading to false");
         if (mounted) setLoading(false);
         return;
       }
       
       try {
-        console.log("OrganizationDetail: Setting loading to true");
         if (mounted) setLoading(true);
         
         // Check auth first
-        console.log("OrganizationDetail: Checking session");
         const { data: { session } } = await supabase.auth.getSession();
-        console.log("OrganizationDetail: Session check result", { hasSession: !!session });
         
         if (!session) {
           if (mounted) {
-            console.log("OrganizationDetail: No session, setting loading to false and navigating back");
             setLoading(false);
             toast({
               title: "Authentication Required",
               description: "Please log in to view this page",
               variant: "destructive",
             });
-            onBack();
+            setTimeout(() => onBack(), 100);
           }
           return;
         }
 
         if (mounted) {
-          console.log("OrganizationDetail: Starting Promise.all for loadData and loadLeaderboard");
-          await Promise.all([loadData(), loadLeaderboard()]);
-          console.log("OrganizationDetail: Promise.all completed");
+          await loadData();
+          await loadLeaderboard();
         }
       } catch (error) {
-        console.error("OrganizationDetail: Error in initializeData", error);
+        console.error("Error initializing organization data:", error);
         if (mounted) {
+          setLoading(false);
           toast({
             title: "Error",
             description: "Failed to load organization data",
             variant: "destructive",
           });
+          setTimeout(() => onBack(), 100);
         }
       } finally {
-        console.log("OrganizationDetail: Finally block, setting loading to false", { mounted });
         if (mounted) {
           setLoading(false);
         }
       }
-      
-      console.log("OrganizationDetail: initializeData completed");
     };
 
     initializeData();
 
     return () => {
-      console.log("OrganizationDetail: Cleanup - setting mounted to false");
       mounted = false;
     };
   }, [organizationId]);
 
   const loadData = async () => {
-    console.log("OrganizationDetail: loadData starting", { organizationId });
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log("OrganizationDetail: Got user", { userId: user?.id });
-      
-      if (!user) {
-        console.log("OrganizationDetail: No user found, calling onBack");
-        toast({
-          title: "Authentication Required",
-          description: "Please log in to view this page",
-          variant: "destructive",
-        });
-        onBack();
-        return;
-      }
-
-      // Load organization
-      console.log("OrganizationDetail: Loading organization", { organizationId });
-      const { data: orgData, error: orgError } = await supabase
-        .from("organizations")
-        .select("*")
-        .eq("id", organizationId)
-        .maybeSingle();
-
-      console.log("OrganizationDetail: Organization loaded", { orgData, orgError });
-
-      if (orgError) {
-        console.error("Error loading organization:", orgError);
-      }
-
-      if (orgData) {
-        setOrganization(orgData);
-      } else {
-        console.log("OrganizationDetail: Organization not found, calling onBack");
-        toast({
-          title: "Organization Not Found",
-          description: "The organization you're looking for doesn't exist",
-          variant: "destructive",
-        });
-        onBack();
-        return;
-      }
-
-      // Load member hours
-      console.log("OrganizationDetail: Loading member data", { userId: user.id, organizationId });
-      const { data: memberData, error: memberError } = await supabase
-        .from("organization_members")
-        .select("total_hours, status")
-        .eq("volunteer_id", user.id)
-        .eq("organization_id", organizationId)
-        .maybeSingle();
-
-      console.log("OrganizationDetail: Member data loaded", { memberData, memberError });
-
-      if (memberError) {
-        console.error("Error loading member data:", memberError);
-      }
-
-      if (memberData) {
-        setMember({
-          id: user.id,
-          totalHours: memberData.total_hours || 0,
-        });
-        console.log("OrganizationDetail: Member state set", { totalHours: memberData.total_hours });
-      } else {
-        // User is not a member of this organization
-        console.log("OrganizationDetail: User not a member, calling onBack");
-        toast({
-          title: "Not a Member",
-          description: "You are not a member of this organization",
-          variant: "destructive",
-        });
-        onBack();
-        return;
-      }
-      
-      console.log("OrganizationDetail: loadData completed successfully");
-    } catch (error) {
-      console.error("Error loading data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load organization data",
-        variant: "destructive",
-      });
-      throw error; // Re-throw to be caught by initializeData
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error("No authenticated user");
     }
+
+    // Load organization
+    const { data: orgData, error: orgError } = await supabase
+      .from("organizations")
+      .select("*")
+      .eq("id", organizationId)
+      .maybeSingle();
+
+    if (orgError) {
+      console.error("Error loading organization:", orgError);
+      throw orgError;
+    }
+
+    if (!orgData) {
+      throw new Error("Organization not found");
+    }
+
+    setOrganization(orgData);
+
+    // Load member hours
+    const { data: memberData, error: memberError } = await supabase
+      .from("organization_members")
+      .select("total_hours, status")
+      .eq("volunteer_id", user.id)
+      .eq("organization_id", organizationId)
+      .maybeSingle();
+
+    if (memberError) {
+      console.error("Error loading member data:", memberError);
+      throw memberError;
+    }
+
+    if (!memberData) {
+      throw new Error("You are not a member of this organization");
+    }
+
+    setMember({
+      id: user.id,
+      totalHours: memberData.total_hours || 0,
+    });
   };
 
   if (loading) {
@@ -221,38 +169,29 @@ export const OrganizationDetail = ({ organizationId, onBack }: OrganizationDetai
   const [leaderboardMembers, setLeaderboardMembers] = useState<any[]>([]);
 
   const loadLeaderboard = async () => {
-    console.log("OrganizationDetail: loadLeaderboard starting", { organizationId });
-    try {
-      const { data, error } = await supabase
-        .from("organization_members")
-        .select("volunteer_id, total_hours, profiles!organization_members_volunteer_id_fkey(full_name)")
-        .eq("organization_id", organizationId)
-        .eq("status", "active")
-        .order("total_hours", { ascending: false })
-        .limit(10);
+    const { data, error } = await supabase
+      .from("organization_members")
+      .select("volunteer_id, total_hours, profiles!organization_members_volunteer_id_fkey(full_name)")
+      .eq("organization_id", organizationId)
+      .eq("status", "active")
+      .order("total_hours", { ascending: false })
+      .limit(10);
 
-      console.log("OrganizationDetail: Leaderboard data loaded", { data, error });
-
-      if (error) {
-        console.error("Error loading leaderboard:", error);
-        return;
-      }
-
-      if (data) {
-        const formatted = data.map((m: any, index: number) => ({
-          id: m.volunteer_id,
-          name: m.profiles?.full_name || "Unknown",
-          avatarUrl: "",
-          totalHours: m.total_hours || 0,
-          rank: index + 1,
-        }));
-        setLeaderboardMembers(formatted);
-        console.log("OrganizationDetail: Leaderboard state set", { count: formatted.length });
-      }
-    } catch (error) {
+    if (error) {
       console.error("Error loading leaderboard:", error);
+      return;
     }
-    console.log("OrganizationDetail: loadLeaderboard completed");
+
+    if (data) {
+      const formatted = data.map((m: any, index: number) => ({
+        id: m.volunteer_id,
+        name: m.profiles?.full_name || "Unknown",
+        avatarUrl: "",
+        totalHours: m.total_hours || 0,
+        rank: index + 1,
+      }));
+      setLeaderboardMembers(formatted);
+    }
   };
 
   return (
