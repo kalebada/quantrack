@@ -2,25 +2,23 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Search, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDate } from "@/lib/formatters";
 import { getMedalInfo } from "@/lib/formatters";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { RoleManagement } from "@/components/admin/RoleManagement";
+import { MemberDetailDialog } from "@/components/admin/MemberDetailDialog";
 
 const ManageMembers = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMember, setSelectedMember] = useState<any>(null);
-  const [memberNotes, setMemberNotes] = useState("");
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -40,9 +38,12 @@ const ManageMembers = () => {
 
       if (!adminProfile) return;
 
+      setOrganizationId(adminProfile.organization_id);
+
       const { data: membersData } = await supabase
         .from("organization_members")
         .select(`
+          id,
           volunteer_id,
           member_role,
           total_hours,
@@ -54,15 +55,30 @@ const ManageMembers = () => {
         .eq("status", "active");
 
       if (membersData) {
-        const formatted = membersData.map((m: any) => ({
-          id: m.volunteer_id,
-          name: m.profiles?.full_name || "Unknown",
-          email: m.profiles?.email || "",
-          school: m.volunteer_profiles?.school_organization || "N/A",
-          dateJoined: new Date(m.joined_at),
-          totalHours: m.total_hours || 0,
-          roles: [m.member_role],
-        }));
+        // For each member, fetch their role assignments
+        const formatted = await Promise.all(
+          membersData.map(async (m: any) => {
+            const { data: roleData } = await supabase
+              .from("member_role_assignments")
+              .select(`
+                organization_roles!inner(name)
+              `)
+              .eq("member_id", m.id);
+
+            const roles = roleData?.map((r: any) => r.organization_roles.name) || [];
+
+            return {
+              id: m.volunteer_id,
+              memberId: m.id,
+              name: m.profiles?.full_name || "Unknown",
+              email: m.profiles?.email || "",
+              school: m.volunteer_profiles?.school_organization || "N/A",
+              dateJoined: new Date(m.joined_at),
+              totalHours: m.total_hours || 0,
+              roles: roles.length > 0 ? roles : ["Member"],
+            };
+          })
+        );
         setMembers(formatted);
       }
     } catch (error) {
@@ -84,15 +100,6 @@ const ManageMembers = () => {
     member.school.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const availableRoles = [
-    "Member",
-    "Event Lead",
-    "Volunteer Coordinator",
-    "Team Captain",
-    "Administrator",
-    "Mentor",
-  ];
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -110,10 +117,18 @@ const ManageMembers = () => {
       </nav>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Search and Actions */}
+        {/* Role Management */}
+        {organizationId && (
+          <RoleManagement 
+            organizationId={organizationId} 
+            onRolesChange={fetchMembers}
+          />
+        )}
+
+        {/* Search */}
         <Card className="mb-6 bg-card border-border">
           <CardContent className="p-6">
-              <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -202,117 +217,15 @@ const ManageMembers = () => {
       </div>
 
       {/* Member Detail Dialog */}
-      <Dialog open={!!selectedMember} onOpenChange={() => setSelectedMember(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          {selectedMember && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="text-2xl">{selectedMember.name}</DialogTitle>
-              </DialogHeader>
-              
-              <div className="space-y-6">
-                {/* Basic Info */}
-                <div>
-                  <h3 className="font-semibold mb-3 flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-primary" />
-                    Contact Information
-                  </h3>
-              <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Email</Label>
-                      <p className="text-sm">{selectedMember.email}</p>
-                    </div>
-                    <div className="col-span-2">
-                      <Label className="text-xs text-muted-foreground">School/Organization</Label>
-                      <p className="text-sm">{selectedMember.school}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Volunteer Info */}
-                <div>
-                  <h3 className="font-semibold mb-3">Volunteer Information</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-xs text-muted-foreground">School/Organization</Label>
-                      <p className="text-sm">{selectedMember.school}</p>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Date Joined</Label>
-                      <p className="text-sm">{formatDate(selectedMember.dateJoined)}</p>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Total Hours</Label>
-                      <p className="text-sm">{selectedMember.totalHours} hours</p>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Level</Label>
-                      <Badge
-                        variant="outline"
-                        style={{
-                          backgroundColor: `${getMedalInfo(selectedMember.totalHours).color}15`,
-                          borderColor: getMedalInfo(selectedMember.totalHours).color,
-                          color: getMedalInfo(selectedMember.totalHours).color,
-                        }}
-                      >
-                        {getMedalInfo(selectedMember.totalHours).emoji} {getMedalInfo(selectedMember.totalHours).name}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Roles Management */}
-                <div>
-                  <h3 className="font-semibold mb-3">Roles</h3>
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap gap-2">
-                      {selectedMember.roles.map((role: string) => (
-                        <Badge key={role} variant="secondary" className="gap-1">
-                          {role}
-                          <button className="ml-1 hover:text-destructive">×</button>
-                        </Badge>
-                      ))}
-                    </div>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Add a role..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableRoles
-                          .filter((role) => !selectedMember.roles.includes(role))
-                          .map((role) => (
-                            <SelectItem key={role} value={role}>
-                              {role}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Notes */}
-                <div>
-                  <h3 className="font-semibold mb-3">Notes</h3>
-                  <Textarea
-                    placeholder="Add notes about this member..."
-                    rows={4}
-                    defaultValue={selectedMember.notes}
-                    onChange={(e) => setMemberNotes(e.target.value)}
-                  />
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 pt-4 border-t border-border">
-                  <Button className="flex-1">Save Changes</Button>
-                  <Button variant="outline" onClick={() => setSelectedMember(null)}>
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      {organizationId && selectedMember && (
+        <MemberDetailDialog
+          member={selectedMember}
+          organizationId={organizationId}
+          open={!!selectedMember}
+          onOpenChange={(open) => !open && setSelectedMember(null)}
+          onUpdate={fetchMembers}
+        />
+      )}
     </div>
   );
 };

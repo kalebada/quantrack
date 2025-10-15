@@ -22,6 +22,7 @@ const ManageEvents = () => {
   const [createStep, setCreateStep] = useState(1); // 1: Event Details, 2: Questions
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [availableRoles, setAvailableRoles] = useState<any[]>([]);
   
   // Form state - Step 1
   const [eventName, setEventName] = useState("");
@@ -31,7 +32,7 @@ const ManageEvents = () => {
   const [endTime, setEndTime] = useState("");
   const [maxVolunteers, setMaxVolunteers] = useState("");
   const [location, setLocation] = useState("");
-  const [memberRoles, setMemberRoles] = useState<string[]>(["volunteer"]);
+  const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
   
   // Form state - Step 2 (Questions)
   const [questions, setQuestions] = useState<Array<{question_text: string, question_type: string, is_required: boolean}>>([]);
@@ -44,6 +45,29 @@ const ManageEvents = () => {
   useEffect(() => {
     fetchEvents();
   }, []);
+
+  useEffect(() => {
+    if (organizationId) {
+      fetchOrganizationRoles();
+    }
+  }, [organizationId]);
+
+  const fetchOrganizationRoles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("organization_roles")
+        .select("*")
+        .eq("organization_id", organizationId)
+        .order("name");
+
+      if (error) throw error;
+      setAvailableRoles(data || []);
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error("Error fetching roles:", error);
+      }
+    }
+  };
 
   const fetchEvents = async () => {
     try {
@@ -104,6 +128,13 @@ const ManageEvents = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Convert role IDs to role names for the member_roles array
+      const roleNames = selectedRoleIds.length > 0 
+        ? availableRoles
+            .filter(role => selectedRoleIds.includes(role.id))
+            .map(role => role.name)
+        : [];
+
       const { data: eventData, error: eventError } = await supabase.from("events").insert({
         organization_id: organizationId,
         name: eventName,
@@ -113,7 +144,7 @@ const ManageEvents = () => {
         end_time: endTime,
         location: location,
         max_volunteers: maxVolunteers ? parseInt(maxVolunteers) : null,
-        member_roles: memberRoles,
+        member_roles: roleNames,
         created_by: user.id,
       }).select().single();
 
@@ -164,7 +195,7 @@ const ManageEvents = () => {
     setEndTime("");
     setMaxVolunteers("");
     setLocation("");
-    setMemberRoles(["volunteer"]);
+    setSelectedRoleIds([]);
     setQuestions([]);
     setCurrentQuestion("");
     setShowCreateDialog(false);
@@ -237,11 +268,11 @@ const ManageEvents = () => {
     return now >= eventStart && now <= eventEnd;
   };
 
-  const toggleMemberRole = (role: string) => {
-    if (memberRoles.includes(role)) {
-      setMemberRoles(memberRoles.filter(r => r !== role));
+  const toggleRoleSelection = (roleId: string) => {
+    if (selectedRoleIds.includes(roleId)) {
+      setSelectedRoleIds(selectedRoleIds.filter(id => id !== roleId));
     } else {
-      setMemberRoles([...memberRoles, role]);
+      setSelectedRoleIds([...selectedRoleIds, roleId]);
     }
   };
 
@@ -403,21 +434,35 @@ const ManageEvents = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Member Roles (Who can view & signup)</Label>
-                <div className="space-y-2">
-                  {["volunteer", "member", "leader", "coordinator"].map((role) => (
-                    <div key={role} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={role}
-                        checked={memberRoles.includes(role)}
-                        onCheckedChange={() => toggleMemberRole(role)}
-                      />
-                      <label htmlFor={role} className="text-sm capitalize cursor-pointer">
-                        {role}
-                      </label>
-                    </div>
-                  ))}
-                </div>
+                <Label>Visible to Roles (Optional)</Label>
+                <p className="text-sm text-muted-foreground">
+                  Select which roles can view and sign up for this event. Leave empty to make visible to all members.
+                </p>
+                {availableRoles.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic">
+                    No custom roles created yet. Create roles in the Manage Members page.
+                  </p>
+                ) : (
+                  <div className="space-y-2 max-h-48 overflow-y-auto border border-border rounded-md p-3">
+                    {availableRoles.map((role) => (
+                      <div key={role.id} className="flex items-start space-x-2">
+                        <Checkbox
+                          id={role.id}
+                          checked={selectedRoleIds.includes(role.id)}
+                          onCheckedChange={() => toggleRoleSelection(role.id)}
+                        />
+                        <div className="flex-1">
+                          <label htmlFor={role.id} className="text-sm font-medium cursor-pointer">
+                            {role.name}
+                          </label>
+                          {role.description && (
+                            <p className="text-xs text-muted-foreground">{role.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="flex gap-2 pt-4">
                 <Button variant="outline" onClick={() => setShowCreateDialog(false)} className="flex-1">
