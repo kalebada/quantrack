@@ -51,6 +51,13 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "admin_profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       certificates: {
@@ -93,6 +100,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -267,6 +281,13 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       organization_members: {
@@ -303,6 +324,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
             referencedColumns: ["id"]
           },
           {
@@ -479,6 +507,13 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tasks_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_roles: {
@@ -592,11 +627,44 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "volunteer_sessions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      public_organizations: {
+        Row: {
+          id: string | null
+          invite_code: string | null
+          mission_statement: string | null
+          name: string | null
+          organization_type: string | null
+          website: string | null
+        }
+        Insert: {
+          id?: string | null
+          invite_code?: string | null
+          mission_statement?: string | null
+          name?: string | null
+          organization_type?: string | null
+          website?: string | null
+        }
+        Update: {
+          id?: string | null
+          invite_code?: string | null
+          mission_statement?: string | null
+          name?: string | null
+          organization_type?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       assign_admin_role: {

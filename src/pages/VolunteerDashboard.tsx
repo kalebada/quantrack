@@ -178,9 +178,9 @@ const VolunteerDashboard = () => {
         return;
       }
 
-      // Find organization by invite code
+      // Find organization by invite code using public view
       const { data: org, error: orgError } = await supabase
-        .from("organizations")
+        .from("public_organizations")
         .select("id, name")
         .eq("invite_code", inviteCode.trim())
         .maybeSingle();

@@ -8,6 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Calendar as CalendarIcon, Clock, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+
+// Validation schema for event signup answers
+const answerSchema = z.string().max(2000, "Answer must be less than 2000 characters");
 
 const EventSignupForm = () => {
   const { eventId } = useParams();
@@ -94,6 +98,21 @@ const EventSignupForm = () => {
       toast({
         title: "Missing Answers",
         description: "Please answer all required questions",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate answer lengths
+    const invalidAnswers = Object.entries(answers).filter(([_, answer]) => {
+      const validation = answerSchema.safeParse(answer);
+      return !validation.success;
+    });
+
+    if (invalidAnswers.length > 0) {
+      toast({
+        title: "Answer Too Long",
+        description: "Each answer must be less than 2000 characters",
         variant: "destructive",
       });
       return;
@@ -215,17 +234,23 @@ const EventSignupForm = () => {
                           {question.is_required && <span className="text-destructive"> *</span>}
                         </Label>
                         {question.question_type === "text" && (
-                          <Textarea
-                            value={answers[question.question_text] || ""}
-                            onChange={(e) =>
-                              setAnswers({
-                                ...answers,
-                                [question.question_text]: e.target.value,
-                              })
-                            }
-                            placeholder="Your answer..."
-                            rows={3}
-                          />
+                          <div className="space-y-1">
+                            <Textarea
+                              value={answers[question.question_text] || ""}
+                              onChange={(e) =>
+                                setAnswers({
+                                  ...answers,
+                                  [question.question_text]: e.target.value,
+                                })
+                              }
+                              placeholder="Your answer..."
+                              rows={3}
+                              maxLength={2000}
+                            />
+                            <p className="text-xs text-muted-foreground text-right">
+                              {(answers[question.question_text] || "").length}/2000 characters
+                            </p>
+                          </div>
                         )}
                       </div>
                     ))}
