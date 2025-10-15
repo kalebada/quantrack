@@ -40,7 +40,8 @@ const ManageMembers = () => {
 
       setOrganizationId(adminProfile.organization_id);
 
-      const { data: membersData } = await supabase
+      // First, get all organization members
+      const { data: membersData, error: membersError } = await supabase
         .from("organization_members")
         .select(`
           id,
@@ -53,6 +54,13 @@ const ManageMembers = () => {
         `)
         .eq("organization_id", adminProfile.organization_id)
         .eq("status", "active");
+
+      if (membersError) {
+        if (import.meta.env.DEV) {
+          console.error("Error fetching members:", membersError);
+        }
+        throw membersError;
+      }
 
       if (membersData) {
         // For each member, fetch their role assignments
@@ -75,7 +83,7 @@ const ManageMembers = () => {
               school: m.volunteer_profiles?.school_organization || "N/A",
               dateJoined: new Date(m.joined_at),
               totalHours: m.total_hours || 0,
-              roles: roles.length > 0 ? roles : ["Member"],
+              roles: roles.length > 0 ? roles : ["No roles assigned"],
             };
           })
         );

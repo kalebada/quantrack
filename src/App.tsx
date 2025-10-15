@@ -17,6 +17,7 @@ import Verify from "./pages/Verify";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import EventSignupForm from "./pages/EventSignupForm";
+import OrganizationDetailPage from "./pages/OrganizationDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/volunteer" element={<VolunteerDashboard />} />
+          <Route path="/organization/:organizationId" element={<OrganizationDetailPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/manage-events" element={<ManageEvents />} />
           <Route path="/manage-members" element={<ManageMembers />} />

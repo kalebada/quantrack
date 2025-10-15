@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { QrCode, Plus } from "lucide-react";
 import { MemberQRCode } from "@/components/MemberQRCode";
 import { OrganizationCard } from "@/components/OrganizationCard";
-import { OrganizationDetail } from "./OrganizationDetail";
 import { TasksCard } from "@/components/TasksCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -16,7 +15,6 @@ import logo from "@/assets/logo.svg";
 
 const VolunteerDashboard = () => {
   const [showQRCode, setShowQRCode] = useState(false);
-  const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
   const [showJoinDialog, setShowJoinDialog] = useState(false);
   const [inviteCode, setInviteCode] = useState("");
   const [loading, setLoading] = useState(true);
@@ -278,25 +276,6 @@ const VolunteerDashboard = () => {
     );
   }
 
-  if (selectedOrgId) {
-    return (
-      <OrganizationDetail
-        organizationId={selectedOrgId}
-        onBack={() => {
-          setSelectedOrgId(null);
-          // Force reload of user data when coming back
-          const checkSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-              await loadUserData(session.user.id);
-            }
-          };
-          checkSession();
-        }}
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -365,7 +344,7 @@ const VolunteerDashboard = () => {
                   logoUrl={org.logoUrl}
                   level={org.level}
                   totalPoints={org.totalPoints}
-                  onClick={() => setSelectedOrgId(org.id)}
+                  onClick={() => navigate(`/organization/${org.id}`)}
                 />
               ))}
 
