@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,6 +17,11 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+
+const sessionSchema = z.object({
+  description: z.string().trim().min(1, "Description is required").max(2000, "Description must be less than 2000 characters"),
+  hours: z.number().positive("Hours must be greater than 0"),
+});
 
 interface SubmitHoursDialogProps {
   isOpen: boolean;
@@ -45,6 +51,21 @@ export const SubmitHoursDialog = ({ isOpen, onClose, organizationId }: SubmitHou
       toast({
         title: "Invalid Hours",
         description: "Please enter a valid number of hours",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate description length
+    const validation = sessionSchema.safeParse({
+      description: description.trim(),
+      hours: hoursNum,
+    });
+
+    if (!validation.success) {
+      toast({
+        title: "Validation Error",
+        description: validation.error.errors[0].message,
         variant: "destructive",
       });
       return;
@@ -144,7 +165,11 @@ export const SubmitHoursDialog = ({ isOpen, onClose, organizationId }: SubmitHou
               rows={4}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              maxLength={2000}
             />
+            <p className="text-xs text-muted-foreground text-right">
+              {description.length}/2000 characters
+            </p>
           </div>
 
           <div className="flex gap-2 justify-end">
