@@ -26,10 +26,27 @@ const Verify = () => {
       return;
     }
 
+    // Check rate limit for verification attempts (max 15 per minute)
+    const { isRateLimited, recordAttempt, getTimeUntilReset, formatTimeRemaining } = await import("@/lib/rateLimit");
+    
+    const rateLimitConfig = {
+      maxAttempts: 15,
+      windowMs: 60 * 1000, // 1 minute
+      storageKey: "verification_rate_limit",
+    };
+
+    if (isRateLimited(rateLimitConfig)) {
+      const timeRemaining = getTimeUntilReset(rateLimitConfig);
+      toast.error(`Too many verification attempts. Please try again in ${formatTimeRemaining(timeRemaining)}.`);
+      return;
+    }
+
     setLoading(true);
     setResult(null);
 
     try {
+      // Record the verification attempt
+      recordAttempt(rateLimitConfig);
       // Try to verify as certificate using secure function
       const { data: certResult, error: certError } = await supabase.rpc('verify_certificate', {
         cert_code: code

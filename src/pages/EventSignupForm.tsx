@@ -89,6 +89,25 @@ const EventSignupForm = () => {
   };
 
   const handleSubmit = async () => {
+    // Check rate limit (max 10 signups per hour)
+    const { isRateLimited, recordAttempt, getTimeUntilReset, formatTimeRemaining } = await import("@/lib/rateLimit");
+    
+    const rateLimitConfig = {
+      maxAttempts: 10,
+      windowMs: 60 * 60 * 1000, // 1 hour
+      storageKey: "event_signup_rate_limit",
+    };
+
+    if (isRateLimited(rateLimitConfig)) {
+      const timeRemaining = getTimeUntilReset(rateLimitConfig);
+      toast({
+        title: "Too Many Signups",
+        description: `You've reached the maximum of 10 event signups per hour. Please try again in ${formatTimeRemaining(timeRemaining)}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Validate required questions
     const unansweredRequired = questions.filter(
       (q) => q.is_required && !answers[q.question_text]?.trim()
@@ -130,6 +149,9 @@ const EventSignupForm = () => {
       });
 
       if (error) throw error;
+
+      // Record successful signup for rate limiting
+      recordAttempt(rateLimitConfig);
 
       toast({
         title: "Successfully Signed Up!",
