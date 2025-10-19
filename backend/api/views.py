@@ -1,7 +1,8 @@
+from os import path
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from .models import Volunteer, Admin, User
+from .models import Volunteer, Admin, User, Organization
 from .serializers import VolunteerSerializer, AdminSerializer, RegisterSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.permissions import BasePermission
@@ -98,24 +99,25 @@ class CustomTokenRefreshView(TokenRefreshView):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsVolunteer])
-def get_volunteer_data(request, pk):
+def get_my_volunteer_data(request):
+    """Get the current volunteer's own data"""
     try:
-        volunteer = Volunteer.objects.get(pk=pk)
+        volunteer = Volunteer.objects.get(user=request.user)
         serializer = VolunteerSerializer(volunteer)
         return Response(serializer.data)
     except Volunteer.DoesNotExist:
-        return Response({'error': 'Volunteer not found'}, status=404)
-
+        return Response({'error': 'Volunteer profile not found'}, status=404)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdmin])
-def get_admin_data(request, pk):
+def get_my_admin_data(request):
+    """Get the current admin's own data"""
     try:
-        admin = Admin.objects.get(pk=pk)
+        admin = Admin.objects.get(user=request.user)
         serializer = AdminSerializer(admin)
         return Response(serializer.data)
     except Admin.DoesNotExist:
-        return Response({'error': 'Admin not found'}, status=404)
+        return Response({'error': 'Admin profile not found'}, status=404)
     
 
 @api_view(['POST'])
@@ -131,3 +133,45 @@ def register_user(request):
 @permission_classes([IsAuthenticated])
 def authenticated(request):
     return Response('authenticated')
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_user(request):
+    try:
+        res = Response()
+        res.data = {'success': True, 'message': 'Logged out successfully'}
+        res.delete_cookie('access_token', path='/')
+        res.delete_cookie('refresh_token', path='/')
+        return res
+    except:
+        return Response({'success':False, 'messsage': 'Logout failed'})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated, IsVolunteer])
+def join_organization(request, org_id):
+    try:
+        volunteer = Volunteer.objects.get(user=request.user)
+        organization = Organization.objects.get(id=org_id)
+        volunteer.organizations.add(organization)
+        volunteer.save()
+        return Response({'success': True, 'message': 'Joined organization successfully'})
+    except Organization.DoesNotExist:
+        return Response({'success': False, 'message': 'Organization not found'}, status=404)
+    
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated, IsVolunteer])
+def quit_organization(request, org_id):
+    try:
+        volunteer = Volunteer.objects.get(user=request.user)
+        organization = Organization.objects.get(id=org_id)
+        if organization in volunteer.organizations.all():
+            volunteer.organizations.remove(organization)
+            volunteer.save()
+            return Response({'success': True, 'message': 'Quit organization successfully'})
+        else:
+            return Response({'success': False, 'message': 'You are not a member of this organization'}, status=400)
+    except Organization.DoesNotExist:
+        return Response({'success': False, 'message': 'Organization not found'}, status=404)
